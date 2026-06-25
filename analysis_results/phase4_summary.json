@@ -1,0 +1,75 @@
+{
+  "ensemble_improvement": -0.003959595959596052,
+  "ensemble_accuracy": 0.8514949494949494,
+  "best_individual_model": "XGBoost",
+  "best_individual_accuracy": 0.8554545454545455,
+  "best_feature_group": "All Features",
+  "model_comparison": [
+    {
+      "Model": "XGBoost",
+      "Accuracy": 0.8554545454545455,
+      "Precision": 0.7804612054612055,
+      "Recall": 0.8032142857142859,
+      "F1_Score": 0.7871423764888155
+    },
+    {
+      "Model": "LightGBM",
+      "Accuracy": 0.8394141414141414,
+      "Precision": 0.7597841886484195,
+      "Recall": 0.7625,
+      "F1_Score": 0.7563402888888809
+    },
+    {
+      "Model": "CatBoost",
+      "Accuracy": 0.8373737373737373,
+      "Precision": 0.7708878889142048,
+      "Recall": 0.8117857142857143,
+      "F1_Score": 0.7821856707317267
+    },
+    {
+      "Model": "Ensemble",
+      "Accuracy": 0.8514949494949494,
+      "Precision": 0.7743385357534399,
+      "Recall": 0.7878571428571427,
+      "F1_Score": 0.7736664261841915
+    }
+  ],
+  "feature_groups_analysis": [
+    {
+      "Feature_Group": "All Features",
+      "Num_Features": 62,
+      "Accuracy": 0.8454545454545455,
+      "F1_Score": 0.7661403528061763
+    },
+    {
+      "Feature_Group": "experience",
+      "Num_Features": 12,
+      "Accuracy": 0.753090909090909,
+      "F1_Score": 0.661649142527944
+    },
+    {
+      "Feature_Group": "technical",
+      "Num_Features": 31,
+      "Accuracy": 0.7669898989898989,
+      "F1_Score": 0.642578026247158
+    },
+    {
+      "Feature_Group": "engagement",
+      "Num_Features": 6,
+      "Accuracy": 0.5622424242424243,
+      "F1_Score": 0.46498242799881007
+    },
+    {
+      "Feature_Group": "interaction",
+      "Num_Features": 8,
+      "Accuracy": 0.7512121212121212,
+      "F1_Score": 0.6438477019470257
+    },
+    {
+      "Feature_Group": "other",
+      "Num_Features": 7,
+      "Accuracy": 0.7572525252525253,
+      "F1_Score": 0.636658566907126
+    }
+  ]
+}

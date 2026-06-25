@@ -1,0 +1,11 @@
+{
+  "highly_correlated_pairs": [
+    {
+      "feature1": "summary_length",
+      "feature2": "summary_word_count",
+      "correlation": 0.9596017562805096
+    }
+  ],
+  "low_variance_features_count": 11,
+  "low_variance_threshold": 0.9999999999999999
+}

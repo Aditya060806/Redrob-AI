@@ -1,0 +1,44 @@
+{
+  "model_type": "VotingEnsemble (XGBoost + LightGBM + CatBoost)",
+  "data_integrity": "SMOTE applied inside CV folds (no data leakage)",
+  "train_samples": 348,
+  "train_samples_augmented": 784,
+  "val_samples": 75,
+  "test_samples": 75,
+  "num_features_original": 78,
+  "num_features_selected": 62,
+  "val_accuracy": 0.8933333333333333,
+  "val_precision": 0.8697478991596639,
+  "val_recall": 0.8297619047619047,
+  "val_f1": 0.8393351313320825,
+  "test_accuracy": 0.8933333333333333,
+  "test_precision": 0.8333333333333333,
+  "test_recall": 0.8821428571428571,
+  "test_f1": 0.8433381433381433,
+  "confusion_matrix": [
+    [
+      39,
+      3,
+      0,
+      0
+    ],
+    [
+      0,
+      14,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      8,
+      3
+    ],
+    [
+      0,
+      0,
+      0,
+      6
+    ]
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "total_improvement": 0.02915470494417849,
+  "overfit_gap": 0.12840638528138537,
+  "final_validation_accuracy": 0.8675757575757576,
+  "final_macro_f1": 0.8061186353625793,
+  "avg_last_improvement": 0.009381099126861858,
+  "is_plateauing": true,
+  "is_underfitting": false,
+  "is_overfitting": true
+}

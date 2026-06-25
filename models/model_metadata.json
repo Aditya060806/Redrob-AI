@@ -1,0 +1,39 @@
+{
+  "n_estimators": 200,
+  "max_depth": 5,
+  "learning_rate": 0.03,
+  "samples_trained": 498,
+  "num_features": 78,
+  "classes": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "cv_accuracy_mean": 0.8454949494949495,
+  "cv_accuracy_std": 0.02674495700561359,
+  "final_accuracy": 1.0,
+  "feature_importance": {
+    "num_specialized_domains": 0.09080277383327484,
+    "avg_domain_depth": 0.0865386351943016,
+    "domain_llm_score": 0.0655970647931099,
+    "summary_length": 0.05485546588897705,
+    "domain_rag_score": 0.05272722244262695,
+    "max_domain_depth": 0.04864091798663139,
+    "ideal_years_score": 0.03914300352334976,
+    "has_ml_and_vector_db": 0.0291880015283823,
+    "summary_word_count": 0.028659850358963013,
+    "total_endorsements": 0.026271844282746315,
+    "num_advanced_skills": 0.025750093162059784,
+    "domain_x_years": 0.02293604239821434,
+    "avg_skill_duration_months": 0.019763050600886345,
+    "years_total": 0.018693743273615837,
+    "years_squared": 0.014480849727988243
+  },
+  "class_weights": {
+    "0": 0.4446428571428571,
+    "1": 1.245,
+    "2": 1.55625,
+    "3": 3.276315789473684
+  }
+}

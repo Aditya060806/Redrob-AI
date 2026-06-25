@@ -1,0 +1,78 @@
+# Redrob Hackathon - Submission Metadata
+
+
+# ============================================================================
+# Team identity
+# ============================================================================
+team_name: "RETRO"
+
+primary_contact:
+  name: "Rakesh S"
+  email: "rakeshsakthi253@gmail.com"
+  phone: "+91-7010582378"
+
+team_members:
+  - name: "Rakesh S"
+    email: "rakeshsakthi253@gmail.com"
+    role: "ML Engineer"
+  - name: "Anirudhh S"
+    email: " "
+    role: " "
+  - name: "Shubha H"
+    email: " "
+    role: " "
+
+# ============================================================================
+# Code and reproducibility
+# ============================================================================
+github_repo: "https://github.com/rakesh-s-omen/india-runs-challenge"
+sandbox_link: "https://huggingface.co/spaces/rakeshhhhhhhh/India_runs_challenge_RETRO"
+
+reproduce_command: "python -m src.main data/candidates.jsonl output/submission.csv"
+
+# ============================================================================
+# Compute environment
+# ============================================================================
+compute:
+  platform: "Local PC"
+  cpu_cores: 8
+  ram_gb: 16
+  python_version: "3.9"
+  os: "Windows"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: false
+  pre_computation_time_minutes: 0
+
+# ============================================================================
+# AI tools declaration
+# ============================================================================
+ai_tools_used:
+  - "Gemini"
+  - "Claude"
+
+ai_usage_summary: |
+  Used Gemini for coding assistance, pipeline debugging, and hyperparameter optimization.
+  Used Claude for architectural guidance and code review.
+  No candidate data was sent to any external LLMs.
+
+# ============================================================================
+# Approach summary
+# ============================================================================
+methodology_summary: |
+  We built a Staged Hybrid Ranking Engine (SHRE) with a pure-Python Career Trajectory-Aware Engine (CTAE) fallback. 
+  The SHRE pipeline filters candidates to eliminate honeypots and under-experienced candidates (Stage 1), 
+  extracts 78 high-signal features across domain depth, seniority trajectory, and behavioral signals (Stage 2), 
+  trains a multi-class Voting Ensemble of XGBoost, LightGBM, and CatBoost using SMOTE + BorderlineSMOTE + ADASYN data balancing (Stage 3), 
+  and sorts candidates using probabilistic soft-voting to produce top 100 with dynamic non-hallucinated reasoning (Stage 4). 
+  If any library or model load fails, the system automatically falls back to the pure-Python rule-based CTAE ranker.
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true

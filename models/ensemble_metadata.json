@@ -1,0 +1,26 @@
+{
+  "model_type": "VotingEnsemble (XGBoost + LightGBM + CatBoost)",
+  "cv_accuracy_mean": 0.9616071428571429,
+  "cv_accuracy_std": 0.017081362919383038,
+  "final_accuracy": 1.0,
+  "samples_trained": 1120,
+  "num_features_selected": 62,
+  "feature_importance": {
+    "summary_length": 1138.0242516882718,
+    "total_endorsements": 1075.0185921266675,
+    "avg_skill_duration_months": 1065.010261447169,
+    "skills_x_engagement": 892.5070170722902,
+    "domain_x_years": 864.0125170778483,
+    "max_skill_duration_months": 801.5060693495907,
+    "recruiter_response_rate": 768.0034784004092,
+    "years_total": 754.0100367227569,
+    "ideal_years_score": 722.5173874013126,
+    "num_advanced_skills": 699.5149499913678,
+    "notice_period_days": 699.0059058996849,
+    "num_skills": 605.5034848521464,
+    "profile_completeness": 582.503506340785,
+    "product_company_ratio": 563.5038237469271,
+    "avg_response_time_hours": 563.0031497071031
+  },
+  "augmentation_strategy": "SMOTE + BorderlineSMOTE + ADASYN"
+}

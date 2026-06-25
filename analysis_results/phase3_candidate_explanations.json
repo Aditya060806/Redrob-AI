@@ -1,0 +1,81 @@
+[
+  {
+    "label": "BEST_RANKED",
+    "predicted_class": 0,
+    "class_probabilities": [
+      0.9819651443701521,
+      0.006214169514933035,
+      0.005998973859904681,
+      0.005821707443176772
+    ],
+    "confidence": 0.9819651443701521,
+    "positive_factors": [],
+    "negative_factors": [
+      {
+        "feature": "ideal_years_score",
+        "shap_value": -0.6820223331451416,
+        "feature_value": -0.3696119732922015
+      },
+      {
+        "feature": "avg_domain_depth",
+        "shap_value": -0.24636536836624146,
+        "feature_value": -0.3364142361269576
+      },
+      {
+        "feature": "has_ml_and_vector_db",
+        "shap_value": -0.23437657952308655,
+        "feature_value": -0.5881716976750462
+      },
+      {
+        "feature": "is_open_to_work",
+        "shap_value": -0.1544981449842453,
+        "feature_value": -0.7954790287907667
+      },
+      {
+        "feature": "avg_skill_duration_months",
+        "shap_value": -0.1124589741230011,
+        "feature_value": -0.7518564348853345
+      }
+    ]
+  },
+  {
+    "label": "WORST_RANKED",
+    "predicted_class": 0,
+    "class_probabilities": [
+      0.4621020487788501,
+      0.03784307867086195,
+      0.1458470737035228,
+      0.3542077889126578
+    ],
+    "confidence": 0.4621020487788501,
+    "positive_factors": [
+      {
+        "feature": "ideal_years_score",
+        "shap_value": 0.4644908010959625,
+        "feature_value": 0.9775465729350457
+      },
+      {
+        "feature": "avg_domain_depth",
+        "shap_value": 0.43036261200904846,
+        "feature_value": 0.630927001545773
+      }
+    ],
+    "negative_factors": [
+      {
+        "feature": "is_open_to_work",
+        "shap_value": -0.8813521265983582,
+        "feature_value": -0.7954790287907667
+      },
+      {
+        "feature": "recruiter_response_rate",
+        "shap_value": -0.33771419525146484,
+        "feature_value": -0.3101341288510627
+      },
+      {
+        "feature": "skills_x_engagement",
+        "shap_value": -0.17679622769355774,
+        "feature_value": 0.22254429646516796
+      }
+    ]
+  }
+]

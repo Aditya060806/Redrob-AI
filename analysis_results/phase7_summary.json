@@ -1,0 +1,63 @@
+{
+  "test_set_size": 75,
+  "total_errors": 7,
+  "overall_error_rate": 0.09333333333333334,
+  "overall_accuracy": 0.9066666666666666,
+  "class_statistics": [
+    {
+      "class": 0,
+      "total": 42,
+      "errors": 4,
+      "error_rate": 0.09523809523809523,
+      "avg_confidence_correct": 0.9071532237987487
+    },
+    {
+      "class": 1,
+      "total": 15,
+      "errors": 1,
+      "error_rate": 0.06666666666666667,
+      "avg_confidence_correct": 0.834393341811463
+    },
+    {
+      "class": 2,
+      "total": 12,
+      "errors": 2,
+      "error_rate": 0.16666666666666666,
+      "avg_confidence_correct": 0.6724984744539914
+    },
+    {
+      "class": 3,
+      "total": 6,
+      "errors": 0,
+      "error_rate": 0.0,
+      "avg_confidence_correct": 0.7936406491874566
+    }
+  ],
+  "error_transitions": [
+    {
+      "from_class": 0,
+      "to_class": 1,
+      "num_errors": 4,
+      "avg_confidence": 0.7794817206104017,
+      "avg_feature_richness": 40.91944294533078
+    },
+    {
+      "from_class": 1,
+      "to_class": 2,
+      "num_errors": 1,
+      "avg_confidence": 0.5253844147156104,
+      "avg_feature_richness": 44.81051877775406
+    },
+    {
+      "from_class": 2,
+      "to_class": 3,
+      "num_errors": 2,
+      "avg_confidence": 0.8975105903677354,
+      "avg_feature_richness": 67.08982923877008
+    }
+  ],
+  "feature_richness_analysis": {
+    "correct_avg": 48.53479979406413,
+    "incorrect_avg": 48.95256414808819
+  }
+}

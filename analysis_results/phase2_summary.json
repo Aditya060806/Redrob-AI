@@ -1,0 +1,34 @@
+{
+  "total_selected_features": 62,
+  "top_20_features": [
+    "summary_length",
+    "total_endorsements",
+    "avg_skill_duration_months",
+    "domain_x_years",
+    "years_total",
+    "num_advanced_skills",
+    "skills_x_engagement",
+    "ideal_years_score",
+    "notice_period_days",
+    "recruiter_response_rate",
+    "max_skill_duration_months",
+    "profile_completeness",
+    "num_skills",
+    "product_company_ratio",
+    "avg_response_time_hours",
+    "avg_endorsements_per_skill",
+    "domain_llm_score",
+    "summary_word_count",
+    "interview_completion_rate",
+    "avg_assessment_score"
+  ],
+  "top_5_features": [
+    "summary_length",
+    "total_endorsements",
+    "avg_skill_duration_months",
+    "domain_x_years",
+    "years_total"
+  ],
+  "num_features_for_80_importance": 14,
+  "correlation_pairs_high": 1
+}

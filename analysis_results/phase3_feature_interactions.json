@@ -1,0 +1,74 @@
+{
+  "best_candidate": {
+    "predicted_class": 0,
+    "confidence": 0.9819651443701521,
+    "top_features": [
+      {
+        "feature": "ideal_years_score",
+        "value": -0.3696119732922015,
+        "shap_value": -0.6820223331451416,
+        "contribution": "negative"
+      },
+      {
+        "feature": "avg_domain_depth",
+        "value": -0.3364142361269576,
+        "shap_value": -0.24636536836624146,
+        "contribution": "negative"
+      },
+      {
+        "feature": "has_ml_and_vector_db",
+        "value": -0.5881716976750462,
+        "shap_value": -0.23437657952308655,
+        "contribution": "negative"
+      },
+      {
+        "feature": "is_open_to_work",
+        "value": -0.7954790287907667,
+        "shap_value": -0.1544981449842453,
+        "contribution": "negative"
+      },
+      {
+        "feature": "avg_skill_duration_months",
+        "value": -0.7518564348853345,
+        "shap_value": -0.1124589741230011,
+        "contribution": "negative"
+      }
+    ]
+  },
+  "worst_candidate": {
+    "predicted_class": 0,
+    "confidence": 0.4621020487788501,
+    "top_features": [
+      {
+        "feature": "is_open_to_work",
+        "value": -0.7954790287907667,
+        "shap_value": -0.8813521265983582,
+        "contribution": "negative"
+      },
+      {
+        "feature": "ideal_years_score",
+        "value": 0.9775465729350457,
+        "shap_value": 0.4644908010959625,
+        "contribution": "positive"
+      },
+      {
+        "feature": "avg_domain_depth",
+        "value": 0.630927001545773,
+        "shap_value": 0.43036261200904846,
+        "contribution": "positive"
+      },
+      {
+        "feature": "recruiter_response_rate",
+        "value": -0.3101341288510627,
+        "shap_value": -0.33771419525146484,
+        "contribution": "negative"
+      },
+      {
+        "feature": "skills_x_engagement",
+        "value": 0.22254429646516796,
+        "shap_value": -0.17679622769355774,
+        "contribution": "negative"
+      }
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "num_honeypot_samples": 250,
+  "num_honeypot_types": 5,
+  "overall_detection_rate": 0.716,
+  "honeypot_precision": 0.716,
+  "type_statistics": [
+    {
+      "type": "Minimal_Profile",
+      "detection_rate": 0.58,
+      "num_samples": 50,
+      "avg_confidence": 0.47133320309152155
+    },
+    {
+      "type": "Flat_Profile",
+      "detection_rate": 1.0,
+      "num_samples": 50,
+      "avg_confidence": 0.782873013814079
+    },
+    {
+      "type": "Impossible_Skills",
+      "detection_rate": 1.0,
+      "num_samples": 50,
+      "avg_confidence": 0.5598225835147199
+    },
+    {
+      "type": "Keyword_Stuffing",
+      "detection_rate": 0.0,
+      "num_samples": 50,
+      "avg_confidence": 0.4618655292046976
+    },
+    {
+      "type": "Random_Noise",
+      "detection_rate": 1.0,
+      "num_samples": 50,
+      "avg_confidence": 0.6669908397132783
+    }
+  ],
+  "confusion_matrix": [
+    [
+      179,
+      0,
+      50,
+      21
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ]
+  ]
+}

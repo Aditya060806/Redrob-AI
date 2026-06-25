@@ -1,0 +1,35 @@
+{
+  "num_test_samples": 75,
+  "total_relevant": 33,
+  "ranking_score": "expected relevance = sum_c P(class=c) * c",
+  "ranking_metrics": [
+    {
+      "cutoff": 10,
+      "ndcg": 0.9450289197149879,
+      "map": 1.0,
+      "precision": 1.0,
+      "recall": 0.30303030303030304
+    },
+    {
+      "cutoff": 50,
+      "ndcg": 0.9591133719812746,
+      "map": 0.999108734402852,
+      "precision": 0.66,
+      "recall": 1.0
+    },
+    {
+      "cutoff": 100,
+      "ndcg": 0.9591133719812746,
+      "map": 0.999108734402852,
+      "precision": 0.44,
+      "recall": 1.0
+    }
+  ],
+  "top_k_hit_rate": {
+    "hit_rate_at_5": 1.0,
+    "hit_rate_at_10": 1.0,
+    "hit_rate_at_20": 0.9
+  },
+  "quality_assessment": "EXCELLENT",
+  "ndcg_at_100": 0.9591133719812746
+}
