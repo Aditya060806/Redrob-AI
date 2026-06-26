@@ -14,14 +14,14 @@ st.sidebar.title("Navigation & Resources")
 st.sidebar.markdown(
     """
     ###  Resources
-    [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rakesh-s-omen/india-runs-challenge/blob/main/Mywork/colab_reproduction.ipynb)
+    [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rakesh-s-omen/india-runs-challenge/blob/main/colab_reproduction.ipynb)
     
     * **GitHub Repository:** [india-runs-challenge](https://github.com/rakesh-s-omen/india-runs-challenge)
     * **Team Name:** RETRO
     
     ###  Test Data
     You can download the sample test file directly from our repository:
-    * [sample_candidates.jsonl](https://raw.githubusercontent.com/rakesh-s-omen/india-runs-challenge/main/Mywork/data/sample_candidates.jsonl)
+    * [sample_candidates.jsonl](https://raw.githubusercontent.com/rakesh-s-omen/india-runs-challenge/main/data/sample_candidates.jsonl)
     """
 )
 
