@@ -1,32 +1,32 @@
-# Redrob Hackathon - Submission Metadata
+# Submission Metadata - Team Vandalizers
 
 
 # ============================================================================
 # Team identity
 # ============================================================================
-team_name: "RETRO"
+team_name: "Vandalizers"
 
 primary_contact:
-  name: "Rakesh S"
-  email: "rakeshsakthi253@gmail.com"
-  phone: "+91-7010582378"
+  name: "Aditya Pandey"
+  email: "aditya060806@gmail.com"
+  phone: " "
 
 team_members:
-  - name: "Rakesh S"
-    email: "rakeshsakthi253@gmail.com"
+  - name: "Aditya Pandey"
+    email: "aditya060806@gmail.com"
     role: "ML Engineer"
-  - name: "Anirudhh S"
+  - name: "Palak Rai"
     email: " "
     role: " "
-  - name: "Shubha H"
+  - name: "Avik Srivastava"
     email: " "
     role: " "
 
 # ============================================================================
 # Code and reproducibility
 # ============================================================================
-github_repo: "https://github.com/rakesh-s-omen/india-runs-challenge"
-sandbox_link: "https://huggingface.co/spaces/rakeshhhhhhhh/India_runs_challenge_RETRO"
+github_repo: "https://github.com/Aditya060806/Redrob-AI"
+sandbox_link: "https://huggingface.co/spaces/Aditya1002/Staged-Hybrid-Ranking-Engine-SHRE"
 
 reproduce_command: "python -m src.main data/candidates.jsonl output/submission.csv"
 
@@ -69,7 +69,7 @@ methodology_summary: |
         meta-feature, fused with the ensemble ordering to optimize the full ranked list.
     (3) Enhanced Honeypot / Anomaly Detection - a multi-signal pre-filter catching timeline overlaps, impossible
         skill durations, and synthetic-profile flags; its score also feeds the model.
-    (4) Behavioral Scoring Module - distills under-utilized Redrob activity/demand/OSS/reliability signals into
+    (4) Behavioral Scoring Module - distills under-utilized platform activity/demand/OSS/reliability signals into
         interpretable sub-scores.
   Pipeline: Stage 1 anomaly pre-filter + experience/pillar gates -> Stage 2 feature engineering (78 base + anomaly +
   behavioral + semantic = 93 signals) -> Stage 3 Voting Ensemble (XGBoost + LightGBM + CatBoost, leakage-safe SMOTE

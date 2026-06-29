@@ -537,10 +537,11 @@ Only **7 / 75** held-out samples misclassified (9.3% error), concentrated on the
 
 **Team Vandalizers** — *Intelligent Candidate Discovery & Ranking*
 
-| Resource | Link |
-|---|---|
-| 🤗 **Live Demo (Hugging Face Space)** | `Aditya1002/Staged-Hybrid-Ranking-Engine-SHRE` |
-| ▶️ **Reproduce** | `python -m src.main data/candidates.jsonl output/submission.csv` |
+**Members:** Aditya Pandey · Palak Rai · Avik Srivastava
+
+* **GitHub:** see `submission_metadata.yaml`
+* **Sandbox:** Streamlit Space (link in `submission_metadata.yaml`)
+* **Reproduce:** `python -m src.main data/candidates.jsonl output/submission.csv`
 
 <div align="center">
 <sub>Built fully open-source, at zero extra cost — with a pure-Python fallback so it always produces a ranked shortlist.</sub>
