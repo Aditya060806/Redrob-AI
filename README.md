@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧭 Staged Hybrid Ranking Engine (SHRE)
+# Staged Hybrid Ranking Engine (SHRE)
 ### An intelligent, explainable AI recruiter
 
 **Rank the Top 100 Senior AI Engineers from a pool of 100k+ candidates — fast, accurate, and fully explainable.**
@@ -20,6 +20,16 @@
   <img alt="Status" src="https://img.shields.io/badge/Pipeline-LTR%20→%20Ensemble%20→%20CTAE-blueviolet">
 </p>
 
+<p>
+  <a href="https://huggingface.co/spaces/Aditya1002/Staged-Hybrid-Ranking-Engine-SHRE">
+    <img alt="Hugging Face Space" src="https://img.shields.io/badge/%F0%9F%A4%97%20Live%20Demo-Hugging%20Face%20Space-FFD21E?labelColor=555">
+  </a>
+</p>
+
+<p><b>Live demo:</b> <a href="https://huggingface.co/spaces/Aditya1002/Staged-Hybrid-Ranking-Engine-SHRE">Staged Hybrid Ranking Engine (SHRE) — a Hugging Face Space by Aditya1002</a></p>
+
+<img src="ui1.png" alt="SHRE — application landing view" width="92%">
+
 </div>
 
 ---
@@ -29,38 +39,52 @@ This repository implements a **Hybrid Architecture** (Anomaly Pre-Filter → Enr
 > **Built for:** *Data & AI Challenge — Intelligent Candidate Discovery.*
 > A system that doesn't just filter, but **intelligently ranks**: deep job understanding, contextual relevance beyond keywords, full signal integration, and a lightning-fast, expertly-ranked shortlist with grounded reasoning.
 
-## 📌 At a glance
+## Live Demo
+
+The engine is deployed and ready to use as a Hugging Face Space:
+
+**[Staged Hybrid Ranking Engine (SHRE) — a Hugging Face Space by Aditya1002](https://huggingface.co/spaces/Aditya1002/Staged-Hybrid-Ranking-Engine-SHRE)**
+
+Paste a job description (optional), upload a `candidates.jsonl`, and get a ranked shortlist with grounded reasoning plus downloadable CSV and XLSX outputs.
+
+<p align="center">
+  <img src="ui2.png" alt="SHRE interface — overview and feature highlights" width="90%">
+  <br><em>The application interface: pipeline overview, the four enhancements, and the candidate workflow.</em>
+</p>
+
+## At a glance
 
 | | |
 |---|---|
-| 🎯 **Task** | Rank & shortlist the Top 100 Senior AI Engineers from 100k+ profiles |
-| 🧩 **Architecture** | 4-stage hybrid: anomaly filter → 93 features → ensemble → LambdaMART, with CTAE fallback |
-| 🧠 **Semantic engine** | Multi-vector `all-MiniLM-L6-v2` embeddings + FAISS (TF-IDF graceful fallback) |
-| 📊 **Held-out accuracy** | **90.7%** validation / **88.0%** test (93-feature LTR run) |
-| 🏅 **Ranking quality** | NDCG@10 **0.991**, NDCG@100 **0.997**; honest hard-slice Spearman **0.894** |
-| ⚡ **Inference** | Loads saved models — **no retraining** — for fast scoring at pool scale |
-| 🔌 **Deep JD understanding** | Paste any JD (`--jd`); it re-targets the experience gate + semantic fit |
-| 🛟 **Reliability** | Automatic fallback chain: **LTR → validated ensemble → pure-Python CTAE** |
+| **Task** | Rank & shortlist the Top 100 Senior AI Engineers from 100k+ profiles |
+| **Architecture** | 4-stage hybrid: anomaly filter → 93 features → ensemble → LambdaMART, with CTAE fallback |
+| **Semantic engine** | Multi-vector `all-MiniLM-L6-v2` embeddings + FAISS (TF-IDF graceful fallback) |
+| **Held-out accuracy** | **90.7%** validation / **88.0%** test (93-feature LTR run) |
+| **Ranking quality** | NDCG@10 **0.991**, NDCG@100 **0.997**; honest hard-slice Spearman **0.894** |
+| **Inference** | Loads saved models — **no retraining** — for fast scoring at pool scale |
+| **Deep JD understanding** | Paste any JD (`--jd`); it re-targets the experience gate + semantic fit |
+| **Reliability** | Automatic fallback chain: **LTR → validated ensemble → pure-Python CTAE** |
 
-## 🗂️ Table of Contents
-- [The Challenge → How SHRE answers it](#-the-challenge--how-shre-answers-it)
-- [The Four Enhancements](#-the-four-enhancements)
-- [Architecture Overview](#-architecture-overview)
-- [Pipeline Flow (diagram)](#-pipeline-flow)
-- [Deep Job Understanding](#-deep-job-understanding-custom-jd)
-- [Fast Inference vs. Retraining](#-fast-inference-vs-retraining)
-- [Installation](#-installation)
-- [How to Run](#-how-to-run)
-- [Performance Summary](#-performance-summary)
-- [Scientific Validation Gallery](#-scientific-validation-gallery)
-- [Repository Structure](#-repository-structure)
-- [Tech Stack](#-tech-stack)
-- [Limitations & Future Work](#-limitations--future-work)
-- [Team](#-team)
+## Table of Contents
+- [Live Demo](#live-demo)
+- [The Challenge → How SHRE answers it](#the-challenge--how-shre-answers-it)
+- [The Four Enhancements](#the-four-enhancements)
+- [Architecture Overview](#architecture-overview)
+- [Pipeline Flow](#pipeline-flow)
+- [Deep Job Understanding](#deep-job-understanding-custom-jd)
+- [Fast Inference vs. Retraining](#fast-inference-vs-retraining)
+- [Installation](#installation)
+- [How to Run](#how-to-run)
+- [Performance Summary](#performance-summary)
+- [Scientific Validation Gallery](#scientific-validation-gallery)
+- [Repository Structure](#repository-structure)
+- [Tech Stack](#tech-stack)
+- [Limitations & Future Work](#limitations--future-work)
+- [Team](#team)
 
 ---
 
-## 🎯 The Challenge → How SHRE answers it
+## The Challenge → How SHRE answers it
 
 | Challenge requirement | How SHRE delivers it |
 |---|---|
@@ -71,7 +95,7 @@ This repository implements a **Hybrid Architecture** (Anomaly Pre-Filter → Enr
 
 ---
 
-## ✨ The Four Enhancements
+## The Four Enhancements
 
 | # | Enhancement | What it does | Graceful degradation |
 |:-:|---|---|---|
@@ -79,8 +103,6 @@ This repository implements a **Hybrid Architecture** (Anomaly Pre-Filter → Enr
 | 2 | **LambdaMART / XGBoost-LTR head** | An `XGBRanker` (`rank:ndcg`) stacked on the ensemble's class-probability meta-feature and **fused** with the ensemble ordering to optimize the full ranked list. | Falls back to the validated ensemble ordering. |
 | 3 | **Enhanced Honeypot / Anomaly Detection** | A multi-signal pre-filter catching timeline overlaps, impossible skill durations, and synthetic-profile flags; its anomaly score also feeds the model. | Continuous score is always produced; never blocks the pipeline. |
 | 4 | **Behavioral Scoring Module** | Distills under-utilized platform activity / recruiter-demand / OSS / reliability signals into interpretable sub-scores. | Neutral defaults for missing signals. |
-
-<sub>1. **Multi-Vector Semantic Layer** — embeds candidate skills, experience trajectory, and full profile, matches against three JD facets, weighted fusion. 2. **LambdaMART/XGBoost-LTR** — `rank:ndcg` head fused with the ensemble. 3. **Enhanced Honeypot/Anomaly Detection** — multi-signal pre-filter + model feature. 4. **Behavioral Scoring** — activity/demand/OSS/reliability sub-scores.</sub>
 
 ### Base model → "Opus 4.8" (this repo)
 
@@ -91,7 +113,7 @@ This repository implements a **Hybrid Architecture** (Anomaly Pre-Filter → Enr
 | Job understanding | Hardcoded role | **Parsed from any JD** (`--jd`) |
 | Semantic matching | — | **Multi-vector transformer + FAISS** |
 | Behavioral signals | Partial (a few) | **Full** demand/OSS/reliability sub-scores |
-| Anomaly handling | 1.05×/1.5× heuristics | **Multi-signal scored detector** |
+| Anomaly handling | 1.05x / 1.5x heuristics | **Multi-signal scored detector** |
 | Scoring at scale | Retrain each run | **Fast inference** (load saved models) |
 | Macro-F1 (5-fold) | 0.731 | **0.794** |
 
@@ -107,14 +129,14 @@ This repository implements a **Hybrid Architecture** (Anomaly Pre-Filter → Enr
 
 ---
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 The system processes candidate data through four stages:
 
 1. **Stage 1 (Anomaly Pre-Filter):** `AnomalyDetector` drops synthetic/honeypot profiles (timeline, skill, and synthetic anomalies), then gates on a **JD-driven experience band** (parsed from the supplied job description, or the default 5–9 target) and a minimum of 2 skill pillars.
 2. **Stage 2 (Enriched Feature Engineering):** Computes **93 dense signals** = **78 base** (career progression, domain specialization in RAG/LLMs/Vector DBs, company classification, platform interactions) **+ 5 anomaly + 5 behavioral + 5 multi-vector semantic** features.
 3. **Stage 3 (Ensemble + Learning-to-Rank):** A **Voting Ensemble (XGBoost + LightGBM + CatBoost)** — trained with **leakage-safe SMOTE inside CV** — produces a class-probability score that, with the enriched features, feeds a **LambdaMART (XGBoost `rank:ndcg`)** head; the two are fused into the final ranking score.
-4. **Stage 4 (Ranker & Reasoning):** Sorts the pool and builds data-backed, **non-hallucinated** reasoning (now citing semantic fit, behavioral signals, and anomaly checks) for each of the top 100. Emits both the canonical `submission.csv` and an enriched `submission_detailed.csv`.
+4. **Stage 4 (Ranker & Reasoning):** Sorts the pool and builds data-backed, **non-hallucinated** reasoning (citing semantic fit, behavioral signals, and anomaly checks) for each of the top 100. Emits the canonical `submission.csv`, an enriched `submission_detailed.csv`, and a formatted `submission.xlsx`.
 
 If any library or model load fails, the pipeline automatically falls back: **LTR → validated ensemble → pure-Python CTAE ranker**.
 
@@ -122,44 +144,43 @@ By default Stage 3 runs in **fast inference mode** — it loads the saved ensemb
 
 ---
 
-## 🔁 Pipeline Flow
+## Pipeline Flow
 
 ```mermaid
 flowchart TD
-    A["📥 candidates.jsonl<br/>(100k+ raw profiles)"] --> B
+    A["candidates.jsonl<br/>(100k+ raw profiles)"] --> B
 
-    subgraph S1["Stage 1 · Anomaly Pre-Filter"]
+    subgraph S1["Stage 1 - Anomaly Pre-Filter"]
         B["AnomalyDetector<br/>timeline / skill / synthetic checks"] --> C{"Synthetic?<br/>or out of JD<br/>experience band?<br/>or &lt; 2 pillars?"}
     end
-    C -- "drop" --> X["🗑️ filtered out"]
+    C -- "drop" --> X["filtered out"]
     C -- "keep" --> D
 
-    subgraph S2["Stage 2 · Feature Engineering (93 signals)"]
+    subgraph S2["Stage 2 - Feature Engineering (93 signals)"]
         D["78 base features"] --> E["+5 anomaly +5 behavioral<br/>+5 multi-vector semantic"]
     end
 
-    JD["📝 Job Description<br/>(--jd: text or file)"] -. "facets + experience band" .-> B
+    JD["Job Description<br/>(--jd: text or file)"] -. "facets + experience band" .-> B
     JD -. "3 JD facets" .-> E
 
     E --> F
 
-    subgraph S3["Stage 3 · Ensemble + Learning-to-Rank"]
+    subgraph S3["Stage 3 - Ensemble + Learning-to-Rank"]
         F["Voting Ensemble<br/>XGBoost + LightGBM + CatBoost<br/>(leakage-safe SMOTE in CV)"] --> G["ensemble score<br/>(meta-feature)"]
         G --> H["LambdaMART<br/>XGBRanker rank:ndcg"]
-        H --> I["⚖️ Rank Fusion<br/>0.6·ensemble + 0.4·LTR"]
+        H --> I["Rank Fusion<br/>0.6 ensemble + 0.4 LTR"]
     end
 
     I --> J
 
-    subgraph S4["Stage 4 · Ranker & Reasoning"]
-        J["Sort + grounded reasoning"] --> K["📄 submission.csv (Top 100)<br/>📄 submission_detailed.csv<br/>📄 rankings_full.csv"]
+    subgraph S4["Stage 4 - Ranker & Reasoning"]
+        J["Sort + grounded reasoning"] --> K["submission.csv (Top 100)<br/>submission_detailed.csv<br/>submission.xlsx + rankings_full.csv"]
     end
 
-    F -. "on failure" .-> CTAE["🛟 CTAE fallback<br/>(pure-Python rule ranker)"]
+    F -. "on failure" .-> CTAE["CTAE fallback<br/>(pure-Python rule ranker)"]
     H -. "on failure" .-> F
     CTAE --> K
 
-    classDef stage fill:#1f2937,stroke:#4b5563,color:#e5e7eb;
     classDef io fill:#0b3d2e,stroke:#10b981,color:#d1fae5;
     classDef jd fill:#3b1f4b,stroke:#a855f7,color:#f3e8ff;
     class A,K io;
@@ -181,13 +202,18 @@ flowchart LR
 
 ---
 
-## 🧠 Deep Job Understanding (custom JD)
+## Deep Job Understanding (custom JD)
 
 The target role is **no longer hardcoded**. `src/shre/job_description.py` parses any raw job description — text or file — into the three semantic facets the engine matches against, plus an experience band that re-targets the Stage-1 gate.
 
+<p align="center">
+  <img src="ui3.png" alt="SHRE — paste a job description to re-target the ranking" width="88%">
+  <br><em>Define the role: paste a job description to re-target the experience gate and the semantic-fit signal.</em>
+</p>
+
 ```mermaid
 flowchart LR
-    R["📝 Raw JD text"] --> P["JobDescription parser<br/>(section + regex heuristics)"]
+    R["Raw JD text"] --> P["JobDescription parser<br/>(section + regex heuristics)"]
     P --> F1["required_skills facet"]
     P --> F2["ideal_experience facet"]
     P --> F3["role_mission facet"]
@@ -198,11 +224,11 @@ flowchart LR
 
 **Example:** a *Staff ML Engineer (8–12 yrs)* JD tightens the experience gate and re-anchors semantic fit, so a different shortlist surfaces than the default *Founding Senior AI Engineer (5–9 yrs)* role — without retraining.
 
-> The supervised ensemble is still trained on labels for the founding-engineer role. A custom JD re-targets the **JD-relative** semantic-fit signal and the **hard experience gate**; the learned *"higher fit ⇒ higher relevance"* relationship is what transfers across roles. This trade-off is documented honestly rather than hidden.
+> The supervised ensemble is still trained on labels for the founding-engineer role. A custom JD re-targets the **JD-relative** semantic-fit signal and the **hard experience gate**; the learned *"higher fit implies higher relevance"* relationship is what transfers across roles. This trade-off is documented honestly rather than hidden.
 
 ---
 
-## ⚡ Fast Inference vs. Retraining
+## Fast Inference vs. Retraining
 
 The training path re-fits the full XGB+LGBM+CatBoost ensemble **and** the LambdaMART head — great for refreshing the model, but the opposite of *lightning-fast* on a 100k pool.
 
@@ -223,7 +249,7 @@ If inference fails (missing/incompatible artifacts), it automatically falls back
 
 ---
 
-## 🛠️ Installation
+## Installation
 
 To set up the environment and install all dependencies:
 ```bash
@@ -234,7 +260,7 @@ pip install -r requirements.txt
 
 ---
 
-## ▶️ How to Run
+## How to Run
 
 ### 1. Primary Ranking Pipeline
 Run the end-to-end pipeline to process candidates and output the final rankings:
@@ -270,25 +296,40 @@ python analysis/ablation_enhanced.py
 The original base test suite is still available via `python test_pipeline.py`.
 
 ### 3. Interactive Sandbox Demo
-Run the Streamlit application to upload candidate batches and interactively view profiles, scores, and rationales (now with an optional JD text box):
+Run the Streamlit application to upload candidate batches and interactively view profiles, scores, and rationales (with an optional JD text box):
 ```bash
 streamlit run sandbox/app.py
 ```
 
-### 📤 What you'll see — outputs
+<p align="center">
+  <img src="ui4.png" alt="SHRE — upload candidates and run the pipeline" width="96%">
+  <br><em>Upload a candidates.jsonl batch; the pipeline filters, scores, and ranks the pool.</em>
+</p>
+
+### What you'll see — outputs
 
 Every run writes the ranked shortlist as both an **Excel workbook** and CSVs to the output directory:
 
 | File | Format | Columns / Sheets | Purpose |
 |---|---|---|---|
-| **`submission.xlsx`** | **XLSX** ⭐ | Sheets: `Top 100`, `Full Rankings`, `Summary` | **The primary ranked deliverable** — formatted recommended shortlist |
+| **`submission.xlsx`** | **XLSX** | Sheets: `Top 100`, `Full Rankings`, `Summary` | **The primary ranked deliverable** — formatted recommended shortlist |
 | `submission.csv` | CSV | `candidate_id, rank, score, reasoning` | Canonical Top-100 (clean 4 columns) |
 | `submission_detailed.csv` | CSV | `…, semantic_fit, behavioral_score, anomaly_score, anomaly_flags, reasoning` | Top-100 with the enriched signals exposed |
 | `rankings_full.csv` | CSV | `candidate_id, rank, score, reasoning` | Every viable candidate, fully ranked |
 
-> The XLSX name is derived from the output path you pass — e.g. `output/submission.csv` ⇒ `output/submission.xlsx` — and is produced on **both** the SHRE and CTAE paths. If `openpyxl` is unavailable the CSVs still write (the workbook is skipped gracefully).
+> The XLSX name is derived from the output path you pass — e.g. `output/submission.csv` produces `output/submission.xlsx` — and is generated on **both** the SHRE and CTAE paths. If `openpyxl` is unavailable the CSVs still write (the workbook is skipped gracefully).
 
-#### 📊 The ranked XLSX deliverable (`submission.xlsx`)
+<p align="center">
+  <img src="ui5.png" alt="SHRE — summary metrics for the ranked shortlist" width="96%">
+  <br><em>Summary metrics: candidates shortlisted, top score, and average semantic / behavioral scores.</em>
+</p>
+
+<p align="center">
+  <img src="ui6.png" alt="SHRE — ranked shortlist with scores, signals, reasoning and downloads" width="96%">
+  <br><em>Ranked shortlist with progress-bar scores, enrichment signals, grounded reasoning, and CSV / XLSX downloads.</em>
+</p>
+
+#### The ranked XLSX deliverable (`submission.xlsx`)
 
 A professionally-formatted Excel workbook built for reviewers:
 
@@ -298,7 +339,7 @@ A professionally-formatted Excel workbook built for reviewers:
 | **Full Rankings** | Every viable candidate, same columns |
 | **Summary** | Run statistics — top/mean score, avg semantic / behavioral / anomaly of the shortlist |
 
-**Formatting:** indigo title banner with role + timestamp + score definition, styled header, banded rows and borders, a **red → amber → green colour scale on the `score` column**, frozen header, an **auto-filter** for sort/filter, 4-decimal number formats, and a wrapped reasoning column.
+**Formatting:** indigo title banner with role + timestamp + score definition, styled header, banded rows and borders, a **red to amber to green colour scale on the `score` column**, frozen header, an **auto-filter** for sort/filter, 4-decimal number formats, and a wrapped reasoning column.
 
 **Example console output** (sample run, inference mode):
 ```text
@@ -322,7 +363,7 @@ Writing ranked XLSX to output/submission.xlsx...  Done!
 
 ---
 
-## 📊 Performance Summary
+## Performance Summary
 
 ### Feature ablation (5-fold) — the enhancements measurably help classification
 
@@ -358,7 +399,7 @@ Writing ranked XLSX to output/submission.xlsx...  Done!
 | **True 2** | 0 | 1 | 8 | 3 |
 | **True 3** | 0 | 0 | 0 | 6 |
 
-> ### 🔍 Honest reporting of ranking quality
+> ### Honest reporting of ranking quality
 > Because the 498 labels are cleanly **rule-separable**, full-set NDCG is near-ceiling and *overstates* difficulty. We therefore also report two harder, more discriminating diagnostics every training run:
 > - **Hard-slice NDCG@10** — restricted to borderline candidates (relevance 1 vs 2), removing the trivially-separable 0 and 3 classes.
 > - **Spearman rank correlation** over the full held-out fold (**≈ 0.89**) — clearly sub-ceiling, and the most honest measure of how well the engine orders the confusable middle.
@@ -371,7 +412,7 @@ Writing ranked XLSX to output/submission.xlsx...  Done!
 
 ---
 
-## 🔬 Scientific Validation Gallery
+## Scientific Validation Gallery
 
 A 9-phase, leakage-free validation suite (`analysis/`) regenerates every figure from the phase summary artifacts in `analysis_results/` — *no number is typed by hand*. Highlights below; full write-up in [`analysis_results/COMPETITION_REPORT.md`](analysis_results/COMPETITION_REPORT.md).
 
@@ -410,8 +451,8 @@ Global and local SHAP attributions explain why each candidate scores as it does 
   <img src="analysis_results/phase3_shap_density.png" alt="SHAP density" width="48%">
 </p>
 <p align="center">
-  <img src="analysis_results/phase3_waterfall_BEST_RANKED.png" alt="SHAP waterfall — best ranked" width="48%">
-  <img src="analysis_results/phase3_waterfall_WORST_RANKED.png" alt="SHAP waterfall — worst ranked" width="48%">
+  <img src="analysis_results/phase3_waterfall_BEST_RANKED.png" alt="SHAP waterfall - best ranked" width="48%">
+  <img src="analysis_results/phase3_waterfall_WORST_RANKED.png" alt="SHAP waterfall - worst ranked" width="48%">
 </p>
 
 ### Ablation — models & feature groups
@@ -443,7 +484,7 @@ Combining all feature categories beats any single group; the ensemble soft-votes
 | engagement | 6 | 0.562 | 0.465 |
 
 ### Stability (50 runs) · Honeypot defense · Ranking quality
-- **Stability:** Acc **85.9% ± 3.0%**, Macro-F1 **78.9% ± 4.3%** over 10×5 repeated stratified CV — *ACCEPTABLE* (CV 3.5%).
+- **Stability:** Acc **85.9% ± 3.0%**, Macro-F1 **78.9% ± 4.3%** over 10x5 repeated stratified CV — *ACCEPTABLE* (CV 3.5%).
 - **Honeypot detection:** **71.6%** overall — 100% on structural anomalies (flat / impossible-skills / random-noise), weak on keyword-stuffing (handled by the Stage-1 rule filter, by design).
 - **Ranking on holdout:** NDCG@100 **0.9591**, Hit@5 / Hit@10 = **100%**.
 
@@ -451,11 +492,11 @@ Combining all feature categories beats any single group; the ensemble soft-votes
 
 | Attack type | Detected | Verdict |
 |---|:--:|---|
-| Flat_Profile | **100%** | ✅ caught outright |
-| Impossible_Skills | **100%** | ✅ caught outright |
-| Random_Noise | **100%** | ✅ caught outright |
-| Minimal_Profile | 58% | ⚠️ partial (near Class-0/1 boundary) |
-| Keyword_Stuffing | 0% | ❌ needs Stage-1 keyword-density cap |
+| Flat_Profile | **100%** | Caught outright |
+| Impossible_Skills | **100%** | Caught outright |
+| Random_Noise | **100%** | Caught outright |
+| Minimal_Profile | 58% | Partial (near Class-0/1 boundary) |
+| Keyword_Stuffing | 0% | Missed (needs Stage-1 keyword-density cap) |
 
 <p align="center">
   <img src="analysis_results/phase5_boxplots.png" alt="Stability boxplots" width="32%">
@@ -473,10 +514,10 @@ Only **7 / 75** held-out samples misclassified (9.3% error), concentrated on the
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 ```text
 |-- requirements.txt            # Main project dependencies (pinned for reproducibility)
-|-- submission_metadata.yaml    # Hackathon metadata
+|-- submission_metadata.yaml    # Submission metadata
 |-- README.md                   # This file
 |-- src/
 |   |-- main.py                 # Pipeline entry (inference by default; --train, --jd)
@@ -490,7 +531,7 @@ Only **7 / 75** held-out samples misclassified (9.3% error), concentrated on the
 |   |   |-- stage3_ranking_validated.py  # Voting ensemble (leakage-safe SMOTE)
 |   |   |-- stage3_ranking_ltr.py   # Feature 2: LambdaMART/XGBoost-LTR head (+ honest metrics)
 |   |   |-- inference.py            # Fast inference-only scoring (no retraining)
-|   |   |-- stage4_submit.py        # Ranked top-100 + enriched reasoning
+|   |   |-- stage4_submit.py        # Ranked top-100 + enriched reasoning + XLSX export
 |   |-- ctae/                   # Fallback rule-based engine
 |   |-- common/                 # Config, data loader, validator, logging
 |-- analysis/                   # 9-phase scientific validation suite (+ ablation_enhanced.py)
@@ -505,7 +546,7 @@ Only **7 / 75** held-out samples misclassified (9.3% error), concentrated on the
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -515,13 +556,13 @@ Only **7 / 75** held-out samples misclassified (9.3% error), concentrated on the
 | **Semantics** | `sentence-transformers/all-MiniLM-L6-v2` + FAISS (TF-IDF fallback) |
 | **Class balance** | imbalanced-learn SMOTE (inside CV folds) |
 | **Explainability** | SHAP, permutation importance |
-| **App / Demo** | Streamlit |
+| **App / Demo** | Streamlit (deployed as a Hugging Face Space) |
 | **Output** | openpyxl (formatted ranked `submission.xlsx`) + CSV |
 | **Fallback** | Pure-Python CTAE rule engine (zero dependency) |
 
 ---
 
-## ⚠️ Limitations & Future Work
+## Limitations & Future Work
 
 1. **Keyword-stuffing susceptibility** — the statistical model can be swayed by keyword-padded profiles.
    - *Mitigation:* enforce a hard, rule-based keyword-density ceiling in the Stage-1 filter.
@@ -533,12 +574,13 @@ Only **7 / 75** held-out samples misclassified (9.3% error), concentrated on the
 
 ---
 
-## 👥 Team
+## Team
 
 **Team Vandalizers** — *Intelligent Candidate Discovery & Ranking*
 
 **Members:** Aditya Pandey · Palak Rai · Avik Srivastava
 
+* **Live demo:** [Staged Hybrid Ranking Engine (SHRE) — a Hugging Face Space by Aditya1002](https://huggingface.co/spaces/Aditya1002/Staged-Hybrid-Ranking-Engine-SHRE)
 * **GitHub:** see `submission_metadata.yaml`
 * **Sandbox:** Streamlit Space (link in `submission_metadata.yaml`)
 * **Reproduce:** `python -m src.main data/candidates.jsonl output/submission.csv`
