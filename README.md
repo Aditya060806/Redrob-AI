@@ -82,6 +82,29 @@ This repository implements a **Hybrid Architecture** (Anomaly Pre-Filter → Enr
 
 <sub>1. **Multi-Vector Semantic Layer** — embeds candidate skills, experience trajectory, and full profile, matches against three JD facets, weighted fusion. 2. **LambdaMART/XGBoost-LTR** — `rank:ndcg` head fused with the ensemble. 3. **Enhanced Honeypot/Anomaly Detection** — multi-signal pre-filter + model feature. 4. **Behavioral Scoring** — activity/demand/OSS/reliability sub-scores.</sub>
 
+### RETRO base → "Opus 4.8" (this repo)
+
+| Capability | RETRO base | Opus 4.8 (this repo) |
+|---|---|---|
+| Features | 78 base | **93** (+anomaly +behavioral +semantic) |
+| Relevance signal | Ensemble class-prob vote | Ensemble **+ LambdaMART LTR fusion** |
+| Job understanding | Hardcoded role | **Parsed from any JD** (`--jd`) |
+| Semantic matching | — | **Multi-vector transformer + FAISS** |
+| Behavioral signals | Partial (a few) | **Full** demand/OSS/reliability sub-scores |
+| Anomaly handling | 1.05×/1.5× heuristics | **Multi-signal scored detector** |
+| Scoring at scale | Retrain each run | **Fast inference** (load saved models) |
+| Macro-F1 (5-fold) | 0.731 | **0.794** |
+
+### Two engines, one guarantee
+
+| | **SHRE** (primary) | **CTAE** (fallback) |
+|---|---|---|
+| Type | ML ensemble + LTR + semantics | Pure-Python rule engine |
+| Dependencies | xgboost, lightgbm, catboost, transformers… | **None** (standard library only) |
+| When it runs | Default | If any SHRE stage / import fails |
+| Output | Identical CSV schema | Identical CSV schema |
+| Purpose | Maximum ranking quality | **Never fail to produce a shortlist** |
+
 ---
 
 ## 🏗️ Architecture Overview
