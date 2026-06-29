@@ -1,19 +1,7 @@
----
-title: India Runs Challenge RETRO
-emoji: 💻 
-colorFrom: blue
-colorTo: indigo
-sdk: streamlit
-sdk_version: 1.31.0
-python_version: 3.9
-app_file: sandbox/app.py
-pinned: false
----
-
 <div align="center">
 
 # 🧭 Staged Hybrid Ranking Engine (SHRE)
-### *"Opus 4.8" upgrade* — an intelligent, explainable AI recruiter
+### An intelligent, explainable AI recruiter
 
 **Rank the Top 100 Senior AI Engineers from a pool of 100k+ candidates — fast, accurate, and fully explainable.**
 
@@ -264,6 +252,36 @@ Run the Streamlit application to upload candidate batches and interactively view
 streamlit run sandbox/app.py
 ```
 
+### 📤 What you'll see — outputs
+
+Every run writes three CSVs to the output directory:
+
+| File | Columns | Purpose |
+|---|---|---|
+| `submission.csv` | `candidate_id, rank, score, reasoning` | The canonical Top-100 shortlist (clean 4 columns) |
+| `submission_detailed.csv` | `…, semantic_fit, behavioral_score, anomaly_score, anomaly_flags, reasoning` | Top-100 with the enriched signals exposed |
+| `rankings_full.csv` | `candidate_id, rank, score, reasoning` | Every viable candidate, fully ranked |
+
+**Example console output** (sample run, inference mode):
+```text
+=== RUNNING SHRE (Enhanced ML Pipeline - 'Opus 4.8' Grade) ===
+    JD[default] exp 3-15y (target 5-9y); facets: skills=348 chars, mission=264 chars
+Stage 1: Filtered 10 down to 4 viable candidates.
+Stage 2: Extracted 93 enriched features.
+Stage 3: Inference mode (scoring with saved models, no retraining).
+  - Ranking head: LambdaMART fused with ensemble (inference)
+  - Test Accuracy: 0.8933   Test F1-Score: 0.8520
+Writing top 100 to output/submission.csv...  Done!
+```
+
+**Example shortlist rows** (real output — reasoning is generated from actual profile data, never hallucinated):
+
+| rank | candidate_id | score | reasoning (truncated) |
+|:--:|---|:--:|---|
+| 1 | `CAND_0072688` | 1.000 | *Data Scientist, 6.9 yrs at Niramai, specializing in vector search and RAG (Milvus); strong semantic alignment to the JD (esp. experience trajectory); very high recruiter responsiveness; high recruiter demand…* |
+| 2 | `CAND_0044890` | 0.596 | *AI Research Engineer, 5.0 yrs at Haptik, vector search & RAG (FAISS); strong semantic JD alignment; active GitHub presence; high recruiter demand.* |
+| 3 | `CAND_0030061` | 0.409 | *Data Analyst, 5.3 yrs at Ola, applied ML (Python); strong semantic JD alignment; active GitHub; reliable follow-through.* |
+
 ---
 
 ## 📊 Performance Summary
@@ -326,6 +344,14 @@ The validation accuracy **plateaus** at the full 498 samples — the core signal
   <img src="analysis_results/phase1_learning_curves.png" alt="Learning curves" width="80%">
 </p>
 
+| Train data used | Samples | Train acc | Val acc | Val F1 |
+|:--:|:--:|:--:|:--:|:--:|
+| 20% | 99 | 0.997 | 0.838 | 0.658 |
+| 40% | 199 | 1.000 | 0.809 | 0.714 |
+| 60% | 298 | 0.999 | 0.849 | 0.793 |
+| 80% | 398 | 0.998 | 0.857 | 0.793 |
+| 100% | 498 | 0.996 | **0.868** | **0.806** |
+
 ### Feature importance & model comparison
 Signal concentrates in profile depth (`summary_length`), skill depth (`avg_skill_duration_months`), and domain longevity (`domain_x_years`).
 
@@ -358,10 +384,40 @@ Combining all feature categories beats any single group; the ensemble soft-votes
   <img src="analysis_results/phase4_feature_groups.png" alt="Feature-group ablation" width="48%">
 </p>
 
+**Per-model comparison** (5-fold) — XGBoost leads individually; the ensemble trades a hair of accuracy for stability:
+
+| Model | Accuracy | Precision | Recall | F1 |
+|---|:--:|:--:|:--:|:--:|
+| XGBoost | **0.855** | 0.780 | 0.803 | **0.787** |
+| LightGBM | 0.839 | 0.760 | 0.763 | 0.756 |
+| CatBoost | 0.837 | 0.771 | 0.812 | 0.782 |
+| **Ensemble (soft-vote)** | 0.851 | 0.774 | 0.788 | 0.774 |
+
+**Feature-group ablation** — every group adds signal; "All features" wins, and *engagement-only* is the weakest standalone (confirming behavioral signals help but aren't sufficient alone):
+
+| Feature group | # Features | Accuracy | F1 |
+|---|:--:|:--:|:--:|
+| **All features** | 62 | **0.845** | **0.766** |
+| technical | 31 | 0.767 | 0.643 |
+| other | 7 | 0.757 | 0.637 |
+| experience | 12 | 0.753 | 0.662 |
+| interaction | 8 | 0.751 | 0.644 |
+| engagement | 6 | 0.562 | 0.465 |
+
 ### Stability (50 runs) · Honeypot defense · Ranking quality
 - **Stability:** Acc **85.9% ± 3.0%**, Macro-F1 **78.9% ± 4.3%** over 10×5 repeated stratified CV — *ACCEPTABLE* (CV 3.5%).
 - **Honeypot detection:** **71.6%** overall — 100% on structural anomalies (flat / impossible-skills / random-noise), weak on keyword-stuffing (handled by the Stage-1 rule filter, by design).
 - **Ranking on holdout:** NDCG@100 **0.9591**, Hit@5 / Hit@10 = **100%**.
+
+**Honeypot detection by attack type** (250 synthetic adversarial profiles):
+
+| Attack type | Detected | Verdict |
+|---|:--:|---|
+| Flat_Profile | **100%** | ✅ caught outright |
+| Impossible_Skills | **100%** | ✅ caught outright |
+| Random_Noise | **100%** | ✅ caught outright |
+| Minimal_Profile | 58% | ⚠️ partial (near Class-0/1 boundary) |
+| Keyword_Stuffing | 0% | ❌ needs Stage-1 keyword-density cap |
 
 <p align="center">
   <img src="analysis_results/phase5_boxplots.png" alt="Stability boxplots" width="32%">

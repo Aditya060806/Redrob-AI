@@ -1,5 +1,5 @@
 """
-Redrob SHRE "Opus 4.8" — interactive web frontend (no Streamlit, no new deps).
+Redrob SHRE — interactive web frontend (no Streamlit, no new deps).
 
 A self-contained Python standard-library HTTP server. It does NOT retrain or
 modify anything: it loads the already-trained model artifacts and runs
@@ -551,7 +551,7 @@ def main():
     port = int(os.environ.get('PORT', '8000'))
     print("Loading model artifacts (read-only)...")
     _artifacts()
-    print(f"\n  Redrob SHRE 'Opus 4.8' frontend running:")
+    print(f"\n  Redrob SHRE frontend running:")
     print(f"    ->  http://localhost:{port}\n  (Ctrl+C to stop)")
     ThreadingHTTPServer(('0.0.0.0', port), Handler).serve_forever()
 
