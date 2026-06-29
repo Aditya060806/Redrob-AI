@@ -277,24 +277,39 @@ streamlit run sandbox/app.py
 
 ### 📤 What you'll see — outputs
 
-Every run writes three CSVs to the output directory:
+Every run writes the ranked shortlist as both an **Excel workbook** and CSVs to the output directory:
 
-| File | Columns | Purpose |
-|---|---|---|
-| `submission.csv` | `candidate_id, rank, score, reasoning` | The canonical Top-100 shortlist (clean 4 columns) |
-| `submission_detailed.csv` | `…, semantic_fit, behavioral_score, anomaly_score, anomaly_flags, reasoning` | Top-100 with the enriched signals exposed |
-| `rankings_full.csv` | `candidate_id, rank, score, reasoning` | Every viable candidate, fully ranked |
+| File | Format | Columns / Sheets | Purpose |
+|---|---|---|---|
+| **`submission.xlsx`** | **XLSX** ⭐ | Sheets: `Top 100`, `Full Rankings`, `Summary` | **The primary ranked deliverable** — formatted recommended shortlist |
+| `submission.csv` | CSV | `candidate_id, rank, score, reasoning` | Canonical Top-100 (clean 4 columns) |
+| `submission_detailed.csv` | CSV | `…, semantic_fit, behavioral_score, anomaly_score, anomaly_flags, reasoning` | Top-100 with the enriched signals exposed |
+| `rankings_full.csv` | CSV | `candidate_id, rank, score, reasoning` | Every viable candidate, fully ranked |
+
+> The XLSX name is derived from the output path you pass — e.g. `output/submission.csv` ⇒ `output/submission.xlsx` — and is produced on **both** the SHRE and CTAE paths. If `openpyxl` is unavailable the CSVs still write (the workbook is skipped gracefully).
+
+#### 📊 The ranked XLSX deliverable (`submission.xlsx`)
+
+A professionally-formatted Excel workbook built for reviewers:
+
+| Sheet | Contents |
+|---|---|
+| **Top 100** | Recommended shortlist — `rank · candidate_id · score · semantic_fit · behavioral_score · anomaly_score · anomaly_flags · reasoning` |
+| **Full Rankings** | Every viable candidate, same columns |
+| **Summary** | Run statistics — top/mean score, avg semantic / behavioral / anomaly of the shortlist |
+
+**Formatting:** indigo title banner with role + timestamp + score definition, styled header, banded rows and borders, a **red → amber → green colour scale on the `score` column**, frozen header, an **auto-filter** for sort/filter, 4-decimal number formats, and a wrapped reasoning column.
 
 **Example console output** (sample run, inference mode):
 ```text
 === RUNNING SHRE (Enhanced ML Pipeline - 'Opus 4.8' Grade) ===
     JD[default] exp 3-15y (target 5-9y); facets: skills=348 chars, mission=264 chars
-Stage 1: Filtered 10 down to 4 viable candidates.
+Stage 1: Filtered 498 down to 293 viable candidates.
 Stage 2: Extracted 93 enriched features.
 Stage 3: Inference mode (scoring with saved models, no retraining).
   - Ranking head: LambdaMART fused with ensemble (inference)
-  - Test Accuracy: 0.8933   Test F1-Score: 0.8520
-Writing top 100 to output/submission.csv...  Done!
+Writing top 100 to output/submission.csv...
+Writing ranked XLSX to output/submission.xlsx...  Done!
 ```
 
 **Example shortlist rows** (real output — reasoning is generated from actual profile data, never hallucinated):
@@ -501,6 +516,7 @@ Only **7 / 75** held-out samples misclassified (9.3% error), concentrated on the
 | **Class balance** | imbalanced-learn SMOTE (inside CV folds) |
 | **Explainability** | SHAP, permutation importance |
 | **App / Demo** | Streamlit |
+| **Output** | openpyxl (formatted ranked `submission.xlsx`) + CSV |
 | **Fallback** | Pure-Python CTAE rule engine (zero dependency) |
 
 ---
