@@ -8,6 +8,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.main import run_shre
 
 st.title("Redrob Sandbox: Founding Senior AI Engineer Ranker")
+st.caption(
+    "Enhanced engine: Enhanced Anomaly Pre-Filter + Behavioral Scoring + "
+    "Multi-Vector Semantic Layer + LambdaMART/XGBoost-LTR ranking head, on the "
+    "RETRO 78-feature ensemble (with pure-Python CTAE fallback)."
+)
 
 # Sidebar with links and information
 st.sidebar.title("Navigation & Resources")
@@ -47,12 +52,18 @@ if uploaded_file is not None:
     try:
         run_shre(temp_input, labeled_path, out_csv)
         st.success("Ranking Complete!")
-        
-        # Display the results
-        df = pd.read_csv(out_csv)
-        st.dataframe(df)
-        
-        # Provide download link
+
+        # Prefer the detailed view (exposes semantic / behavioral / anomaly
+        # signals); fall back to the canonical submission if absent.
+        detailed_csv = os.path.join(os.path.dirname(out_csv) or ".", "submission_detailed.csv")
+        if os.path.exists(detailed_csv):
+            st.subheader("Top candidates with enriched signals")
+            ddf = pd.read_csv(detailed_csv)
+            st.dataframe(ddf)
+        else:
+            st.dataframe(pd.read_csv(out_csv))
+
+        # Provide download link for the canonical submission.
         with open(out_csv, "rb") as f:
             st.download_button(
                 label="Download submission.csv",

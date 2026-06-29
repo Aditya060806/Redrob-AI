@@ -6,3 +6,7 @@ lightgbm>=4.0.0
 catboost>=1.2.0
 imbalanced-learn>=0.11.0
 streamlit>=1.30.0
+# Multi-Vector Semantic Layer (Feature 1). Gracefully falls back to a
+# scikit-learn TF-IDF encoder if these are unavailable at runtime.
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.4

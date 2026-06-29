@@ -40,5 +40,15 @@
       0,
       6
     ]
-  ]
+  ],
+  "ranking_head": "XGBRanker (rank:ndcg / LambdaMART) fused with Voting Ensemble",
+  "ltr_features": 75,
+  "fusion_ensemble_weight": 0.6,
+  "ndcg_at_10": 0.9958161303893934,
+  "ndcg_at_100": 0.9969494037821149,
+  "pure_ltr_ndcg_at_10": 0.9726130496384515,
+  "pure_ltr_ndcg_at_100": 0.9784187828171114,
+  "baseline_ndcg_at_10": 0.9964741901407518,
+  "baseline_ndcg_at_100": 0.9976139155254204,
+  "ndcg_at_10_gain_vs_ensemble": -0.000658059751358353
 }

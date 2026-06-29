@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Redrob SHRE · Opus 4.8 Ranker</title>
+<style>
+  :root{
+    /* soft, soothing night palette — deep slate, muted periwinkle & dusty sage */
+    --bg:#161922; --panel:#1f232f; --panel2:#191d27; --line:#2b313f;
+    --txt:#dde2ec; --muted:#9aa3b5; --accent:#92a2d6; --accent2:#8fb4ac;
+    --good:#8fbfa3; --warn:#d6b079; --bad:#cf9a9a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(1100px 620px at 82% -12%,#232a3c 0%,rgba(35,42,60,0) 60%),
+      radial-gradient(900px 520px at 5% 110%,#1d2733 0%,rgba(29,39,51,0) 55%),
+      var(--bg);
+    color:var(--txt);font:15px/1.55 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial;
+    -webkit-font-smoothing:antialiased}
+  a{color:var(--accent)}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 80px}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+  .mark{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+    background:linear-gradient(140deg,var(--accent),var(--accent2));color:#1a1f2b;font-weight:800;font-size:20px;
+    box-shadow:0 8px 26px -14px rgba(146,162,214,.6)}
+  h1{font-size:21px;margin:0;letter-spacing:.2px}
+  .sub{color:var(--muted);font-size:13px;margin-top:2px}
+  .tagline{color:var(--muted);font-size:13.5px;margin:14px 0 22px;border-left:2px solid var(--accent);padding-left:12px}
+  .tagline b{color:var(--txt)}
+  .tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--panel2);padding:6px;border-radius:12px;border:1px solid var(--line);width:max-content}
+  .tab{padding:8px 16px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:600;font-size:13.5px;border:1px solid transparent}
+  .tab.active{background:var(--panel);color:var(--txt);border-color:var(--line)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px;font-weight:600;letter-spacing:.2px}
+  input,textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    border-radius:9px;padding:10px 11px;font:inherit;outline:none}
+  input:focus,textarea:focus{border-color:var(--accent)}
+  textarea{resize:vertical;min-height:62px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .cand-title{font-weight:700;font-size:14px;color:var(--accent2)}
+  .btn{background:linear-gradient(140deg,var(--accent),#8893c9);border:none;color:#171b24;font-weight:700;
+    padding:12px 20px;border-radius:10px;cursor:pointer;font-size:14.5px;transition:filter .15s,transform .05s}
+  .btn:hover{filter:brightness(1.06)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:600;padding:8px 13px;font-size:13px}
+  .btn.tiny{padding:6px 10px;font-size:12px}
+  .x{color:var(--bad);cursor:pointer;font-weight:700;background:none;border:none;font-size:16px}
+  details{margin-top:10px}
+  summary{cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600;user-select:none}
+  .toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:18px 0 8px}
+  .switch{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13.5px;cursor:pointer;user-select:none}
+  .switch input{width:auto}
+  .hint{color:var(--muted);font-size:12.5px;margin-top:8px}
+  .hint code{background:var(--panel2);border:1px solid var(--line);padding:1px 5px;border-radius:5px;font-size:11.5px}
+  .drop{border:1.5px dashed var(--line);border-radius:12px;padding:28px 18px;text-align:center;cursor:pointer;
+    background:var(--panel2);transition:border-color .15s,background .15s}
+  .drop:hover,.drop.over{border-color:var(--accent);background:#20283a}
+  .drop-ico{font-size:26px;color:var(--accent);margin-bottom:6px}
+  /* results */
+  #status{margin:18px 0 10px;color:var(--muted);font-size:13.5px;min-height:20px}
+  .err{color:var(--bad)}
+  .res{display:flex;gap:16px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:16px 18px;margin-bottom:12px}
+  .res.user{border-color:var(--accent);box-shadow:inset 0 0 0 1px #39426a}
+  .rank{min-width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-weight:800;
+    background:var(--panel2);border:1px solid var(--line);color:var(--accent2)}
+  .res.top .rank{background:linear-gradient(140deg,var(--accent),var(--accent2));color:#191d27;border:none}
+  .res-main{flex:1;min-width:0}
+  .res-name{font-weight:700;font-size:15.5px}
+  .res-meta{color:var(--muted);font-size:12.5px;margin:1px 0 9px}
+  .badge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:8px;
+    background:#2a3050;color:var(--accent);vertical-align:middle}
+  .bars{display:flex;gap:18px;flex-wrap:wrap;margin:7px 0 9px}
+  .bar b{display:block;font-size:10.5px;color:var(--muted);margin-bottom:4px;font-weight:600;letter-spacing:.3px}
+  .track{width:130px;height:7px;background:var(--panel2);border-radius:4px;overflow:hidden}
+  .fill{height:100%;border-radius:4px}
+  .reason{font-size:13px;color:#cdd8ea;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+  .chips{margin-top:8px}
+  .chip{display:inline-block;font-size:11px;padding:3px 9px;border-radius:20px;margin:3px 6px 0 0}
+  .chip.flag{background:#332a1e;color:var(--warn);border:1px solid #4a3d28}
+  .chip.clean{background:#22302a;color:var(--good);border:1px solid #314a3d}
+  .ring{--p:0;min-width:74px;width:74px;height:74px;border-radius:50%;display:grid;place-items:center;
+    background:conic-gradient(var(--accent2) calc(var(--p)*1%), #262c3a 0);}
+  .ring i{width:58px;height:58px;border-radius:50%;background:var(--panel);display:grid;place-items:center;
+    font-style:normal;font-weight:800;font-size:17px}
+  .ring small{display:block;font-size:9px;color:var(--muted);font-weight:600;text-align:center;margin-top:-2px}
+  .drop-card{border-color:#4a3d28}
+  .drop-row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px;margin-top:9px}
+  .drop-x{color:var(--warn);font-weight:700}
+  .drop-why{color:var(--muted);font-size:12.5px}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid var(--line);border-top-color:var(--accent);
+    border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:8px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  @media(max-width:680px){.grid,.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="mark">R</div>
+    <div>
+      <h1>Redrob SHRE · <span style="color:var(--accent2)">Opus 4.8</span></h1>
+      <div class="sub">Founding Senior AI Engineer — intelligent candidate ranker</div>
+    </div>
+  </header>
+  <div class="tagline">
+    Anomaly pre-filter → behavioral scoring → <b>multi-vector semantic</b> fit →
+    <b>LambdaMART</b> learning-to-rank. Describe candidates below and the engine returns a
+    ranked shortlist with fit scores, signal breakdown, and fact-grounded reasoning.
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-mode="form">Build candidates</div>
+    <div class="tab" data-mode="paste">Paste JSONL</div>
+    <div class="tab" data-mode="upload">Upload .jsonl</div>
+  </div>
+
+  <!-- FORM MODE -->
+  <div id="pane-form">
+    <div id="cands"></div>
+    <button class="btn ghost" id="addCand">+ Add another candidate</button>
+  </div>
+
+  <!-- PASTE MODE -->
+  <div id="pane-paste" style="display:none">
+    <div class="card">
+      <label>One candidate JSON object per line (matches data/candidate_schema.json)</label>
+      <textarea id="pasteBox" rows="9" placeholder='{"candidate_id":"CAND_0000001","profile":{...},"skills":[...],"redrob_signals":{...}}'></textarea>
+      <div class="hint">Tip: <a href="#" id="loadSample">load a sample candidate</a> to see the expected shape.</div>
+    </div>
+  </div>
+
+  <!-- UPLOAD MODE -->
+  <div id="pane-upload" style="display:none">
+    <div class="card">
+      <label>Upload a candidates file (.jsonl / .json / .txt)</label>
+      <div id="drop" class="drop">
+        <div class="drop-ico">⭱</div>
+        <div><b>Click to choose a file</b> or drag &amp; drop it here</div>
+        <div class="hint">Accepts a JSON array, JSONL (one object per line), or a single object.
+          Need test data? See <code>AbPrompts/chatgpt_sample_json_prompt.txt</code>.</div>
+      </div>
+      <input type="file" id="fileInput" accept=".jsonl,.json,.txt" style="display:none" />
+      <div class="hint" id="fileInfo"></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <label class="switch"><input type="checkbox" id="includePool" />
+      Also add the 10-candidate benchmark pool for context (off = rank only your input)</label>
+  </div>
+
+  <button class="btn" id="rankBtn">⚡ Rank candidates</button>
+  <div id="status"></div>
+  <div id="results"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let mode = 'form';
+let candCount = 0;
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active'); mode = t.dataset.mode;
+  $('#pane-form').style.display  = mode==='form'  ? '' : 'none';
+  $('#pane-paste').style.display = mode==='paste' ? '' : 'none';
+  $('#pane-upload').style.display= mode==='upload'? '' : 'none';
+});
+
+/* ---------- candidate form builder ---------- */
+function candCard(){
+  candCount++;
+  const n = candCount;
+  const el = document.createElement('div');
+  el.className = 'card'; el.dataset.card = n;
+  el.innerHTML = `
+    <div class="row-head">
+      <div class="cand-title">Candidate ${n}</div>
+      <button class="x" title="remove" onclick="this.closest('[data-card]').remove()">✕</button>
+    </div>
+    <div class="grid">
+      <div><label>Name</label><input data-f="name" placeholder="e.g. Ananya Bose"></div>
+      <div><label>Current title *</label><input data-f="title" placeholder="Senior ML Engineer"></div>
+    </div>
+    <div class="grid3" style="margin-top:12px">
+      <div><label>Company</label><input data-f="company" placeholder="Haptik"></div>
+      <div><label>Years of experience *</label><input data-f="years" type="number" step="0.1" min="0" placeholder="6"></div>
+      <div><label>Industry</label><input data-f="industry" placeholder="AI/ML"></div>
+    </div>
+    <div style="margin-top:12px"><label>Skills * (comma-separated)</label>
+      <input data-f="skills" placeholder="Python, PyTorch, RAG, FAISS, LLM, vector search"></div>
+    <div style="margin-top:12px"><label>Profile summary</label>
+      <textarea data-f="summary" placeholder="What they've built, depth in LLMs / retrieval / production ML..."></textarea></div>
+    <details>
+      <summary>Advanced platform signals (optional)</summary>
+      <div class="grid3" style="margin-top:12px">
+        <div><label>GitHub activity (0–100)</label><input data-f="github" type="number" min="0" max="100" placeholder="60"></div>
+        <div><label>Recruiter response rate (0–1)</label><input data-f="response_rate" type="number" step="0.05" min="0" max="1" placeholder="0.7"></div>
+        <div><label>Notice period (days)</label><input data-f="notice" type="number" min="0" max="180" placeholder="60"></div>
+      </div>
+      <label class="switch" style="margin-top:12px"><input type="checkbox" data-f="open_to_work" checked> Open to work</label>
+    </details>`;
+  $('#cands').appendChild(el);
+}
+$('#addCand').onclick = candCard;
+candCard(); // start with one
+
+function readForms(){
+  const forms = [];
+  document.querySelectorAll('[data-card]').forEach(card => {
+    const f = {};
+    card.querySelectorAll('[data-f]').forEach(inp => {
+      f[inp.dataset.f] = inp.type === 'checkbox' ? inp.checked : inp.value;
+    });
+    forms.push(f);
+  });
+  return forms;
+}
+
+/* ---------- sample loader ---------- */
+$('#loadSample').onclick = async (e) => {
+  e.preventDefault();
+  const r = await fetch('/api/sample'); const pool = await r.json();
+  $('#pasteBox').value = JSON.stringify(pool[0]);
+};
+function ingestFile(file){
+  if(!file) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    $('#fileInput').dataset.text = fr.result;
+    $('#fileInfo').innerHTML = `✓ Loaded <b>${esc(file.name)}</b> · ${(file.size/1024).toFixed(1)} KB · `
+      + `ready — click “Rank candidates”.`;
+  };
+  fr.readAsText(file);
+}
+const drop = $('#drop'), fileInput = $('#fileInput');
+drop.onclick = () => fileInput.click();
+fileInput.onchange = e => ingestFile(e.target.files[0]);
+['dragover','dragenter'].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => ingestFile(e.dataTransfer.files[0]));
+
+/* ---------- rank ---------- */
+$('#rankBtn').onclick = async () => {
+  const payload = { mode, include_pool: $('#includePool').checked };
+  if(mode === 'form')  payload.forms = readForms();
+  if(mode === 'paste') payload.text  = $('#pasteBox').value;
+  if(mode === 'upload')payload.text  = $('#fileInput').dataset.text || '';
+
+  const btn = $('#rankBtn'); btn.disabled = true;
+  $('#results').innerHTML = '';
+  $('#status').innerHTML = '<span class="spin"></span>Running anomaly filter, feature engineering, semantic embedding & LTR…';
+  try{
+    const r = await fetch('/api/rank', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)});
+    const data = await r.json();
+    if(!r.ok){ $('#status').innerHTML = '<span class="err">⚠ '+ (data.error||'failed') +'</span>'; return; }
+    render(data);
+  }catch(err){ $('#status').innerHTML = '<span class="err">⚠ '+ err +'</span>'; }
+  finally{ btn.disabled = false; }
+};
+
+function bar(label, val, color){
+  return `<div class="bar"><b>${label}</b><div class="track">
+    <div class="fill" style="width:${val}%;background:${color}"></div></div></div>`;
+}
+function render(data){
+  const {results, info} = data;
+  const dropped = data.dropped || [];
+  $('#status').innerHTML = `Scored <b>${info.viable}</b> viable candidate(s)`
+    + (info.dropped ? ` · <span style="color:var(--warn)">${info.dropped} filtered out</span>` : '')
+    + ` · received ${info.received}.`
+    + ((info.warnings && info.warnings.length)
+        ? '<br>' + info.warnings.map(w => `<span class="err">⚠ ${esc(w)}</span>`).join('<br>')
+        : '');
+  const box = $('#results');
+
+  // Filtered-out section first, so your own dropped candidates are never invisible.
+  let droppedHtml = '';
+  if(dropped.length){
+    droppedHtml = `<div class="card drop-card"><div class="cand-title" style="color:var(--warn)">
+      Filtered out before ranking (${dropped.length})</div>`
+      + dropped.map(d => `<div class="drop-row">
+          <span class="drop-x">✕</span>
+          <span><b>${esc(d.name)}</b>${d.is_user?'<span class="badge">YOURS</span>':''}
+            <span style="color:var(--muted)">· ${esc(d.candidate_id)}</span><br>
+            <span class="drop-why">${esc(d.reason)}</span></span></div>`).join('')
+      + `</div>`;
+  }
+
+  if(!results.length){
+    box.innerHTML = droppedHtml + '<div class="card">No candidates passed the pre-filter, so there is nothing to rank. '
+      + 'See the reasons above and adjust the input.</div>';
+    return;
+  }
+  box.innerHTML = droppedHtml + results.map(c => {
+    const flags = c.anomaly_flags.length
+      ? c.anomaly_flags.map(f => `<span class="chip flag">⚑ ${f}</span>`).join('')
+      : '<span class="chip clean">✓ clean profile — no anomalies</span>';
+    return `<div class="res ${c.rank<=3?'top':''} ${c.is_user?'user':''}">
+      <div class="rank">#${c.rank}</div>
+      <div class="res-main">
+        <div class="res-name">${esc(c.name)}${c.is_user?'<span class="badge">YOURS</span>':''}</div>
+        <div class="res-meta">${esc(c.title)}${c.company?' · '+esc(c.company):''} · ${c.years} yrs · ${c.candidate_id}</div>
+        <div class="bars">
+          ${bar('SEMANTIC FIT', c.semantic_fit, 'var(--accent2)')}
+          ${bar('BEHAVIORAL', c.behavioral, 'var(--accent)')}
+          ${bar('ANOMALY', c.anomaly_score, c.anomaly_score>40?'var(--warn)':'var(--good)')}
+        </div>
+        <div class="reason">${esc(c.reasoning)}</div>
+        <div class="chips">${flags}</div>
+      </div>
+      <div class="ring" style="--p:${c.fit_score}"><i>${Math.round(c.fit_score)}<small>FIT</small></i></div>
+    </div>`;
+  }).join('');
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+</script>
+</body>
+</html>

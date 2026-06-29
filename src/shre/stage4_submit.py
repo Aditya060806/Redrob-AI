@@ -58,10 +58,34 @@ def _generate_reasoning(cand):
     if behavior:
         behavior_str = "; features " + " and ".join(behavior)
 
-    # Risk Flags
+    # Semantic fit (Feature 1) - grounded in the multi-vector fusion score.
+    semantic = cand.get('_semantic', {})
+    fusion = semantic.get('semantic_fusion_score')
+    skills_sim = semantic.get('semantic_skills_sim', 0)
+    traj_sim = semantic.get('semantic_traj_sim', 0)
+    semantic_str = ""
+    if fusion is not None:
+        if fusion >= 0.7:
+            best = "skills" if skills_sim >= traj_sim else "experience trajectory"
+            semantic_str = f"; strong semantic alignment to the JD (esp. {best})"
+        elif fusion >= 0.55:
+            semantic_str = "; moderate semantic fit to the JD"
+
+    # Behavioral signals (Feature 4) beyond the raw github/response above.
+    beh = cand.get('_behavioral', {})
+    beh_bits = []
+    if beh.get('demand_score', 0) >= 0.6:
+        beh_bits.append("high recruiter demand")
+    if beh.get('oss_score', 0) >= 0.6:
+        beh_bits.append("strong open-source footprint")
+    if beh.get('reliability_score', 0) >= 0.7:
+        beh_bits.append("reliable follow-through")
+    beh_str = ("; " + ", ".join(beh_bits)) if beh_bits else ""
+
+    # Risk Flags + anomaly notes (Feature 3).
     notice = signals.get('notice_period_days', 0)
     open_to_work = signals.get('open_to_work_flag', False)
-    
+
     flags = []
     if notice > 90:
         flags.append(f"a long {notice}-day notice period")
@@ -72,11 +96,24 @@ def _generate_reasoning(cand):
     if flags:
         flags_str = ". Note: candidate has " + " and is ".join(flags)
 
+    # Concise data-quality note; the full flag list lives in submission_detailed.csv.
+    anomaly = cand.get('_anomaly', {})
+    anomaly_flags = anomaly.get('flags', []) if isinstance(anomaly, dict) else []
+    anomaly_str = ""
+    if anomaly_flags:
+        kinds = sorted({f.split(':', 1)[0] for f in anomaly_flags})
+        anomaly_str = f". Minor data-quality flag ({', '.join(kinds)})"
+
     # Assemble
-    reasoning = f"{intro}{focus}{infra}{growth}{behavior_str}{flags_str}."
+    reasoning = (f"{intro}{focus}{infra}{growth}{semantic_str}"
+                 f"{behavior_str}{beh_str}{flags_str}{anomaly_str}.")
     reasoning = reasoning.replace("..", ".").replace(" .", ".").replace("  ", " ").strip()
-    
-    return reasoning[:220]
+
+    # Trim cleanly at a word boundary (no mid-word cuts) and end with a period.
+    limit = 300
+    if len(reasoning) > limit:
+        reasoning = reasoning[:limit].rsplit(' ', 1)[0].rstrip(' ,;[') + '.'
+    return reasoning
 
 def export_submission(candidates, scores, out_path):
     """
@@ -124,5 +161,26 @@ def export_submission(candidates, scores, out_path):
         writer.writerow(['candidate_id', 'rank', 'score', 'reasoning'])
         for rank, item in enumerate(scored_candidates, 1):
             writer.writerow([item['candidate_id'], rank, item['score'], _generate_reasoning(item['raw'])])
-    
+
+    # Detailed top-100 view exposing the new enrichment signals (for the UI /
+    # analysis). The canonical submission.csv above stays a clean 4 columns.
+    detailed_path = os.path.join(os.path.dirname(out_path), 'submission_detailed.csv')
+    with open(detailed_path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(['candidate_id', 'rank', 'score', 'semantic_fit',
+                         'behavioral_score', 'anomaly_score', 'anomaly_flags', 'reasoning'])
+        for rank, item in enumerate(top_100, 1):
+            raw = item['raw']
+            sem = raw.get('_semantic', {}) or {}
+            beh = raw.get('_behavioral', {}) or {}
+            anom = raw.get('_anomaly', {}) or {}
+            writer.writerow([
+                item['candidate_id'], rank, round(item['score'], 4),
+                round(sem.get('semantic_fusion_score', 0.0), 4),
+                round(beh.get('behavioral_composite', 0.0), 4),
+                round(anom.get('anomaly_score', 0.0), 4),
+                '; '.join(anom.get('flags', [])),
+                _generate_reasoning(raw),
+            ])
+
     print("Done!")

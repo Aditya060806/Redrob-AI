@@ -13,7 +13,7 @@ def load_jsonl(filepath):
     return data
 
 def run_shre(candidates_path, labeled_path, out_path):
-    print("=== RUNNING SHRE (Validated ML Pipeline - Competition Grade) ===")
+    print("=== RUNNING SHRE (Enhanced ML Pipeline - 'Opus 4.8' Grade) ===")
     from src.shre.stage1_filter import FastFilter
     from src.shre.stage2_features import FeatureEngineer
     from src.shre.stage3_ranking_validated import train_and_predict_validated
@@ -21,17 +21,30 @@ def run_shre(candidates_path, labeled_path, out_path):
 
     candidates = load_jsonl(candidates_path)
 
+    # Stage 1: Enhanced anomaly/honeypot pre-filter + experience/pillar gates.
     ff = FastFilter()
     viable = ff.filter(candidates)
     print(f"Stage 1: Filtered {len(candidates)} down to {len(viable)} viable candidates.")
 
+    # Stage 2: 78 base features + anomaly + behavioral + multi-vector semantic.
     fe = FeatureEngineer()
     feature_matrix = fe.compute_features(viable)
     feature_names = list(feature_matrix[0][1].keys())
-    print(f"Stage 2: Extracted {len(feature_names)} features.")
+    print(f"Stage 2: Extracted {len(feature_names)} enriched features.")
 
-    scores, metadata = train_and_predict_validated(labeled_path, feature_matrix, feature_names)
-    print("Stage 3: Validated Ensemble prediction complete.")
+    # Stage 3: LambdaMART/XGBoost-LTR head stacked on the validated ensemble.
+    # Falls back to the plain validated ensemble if the LTR head fails.
+    try:
+        from src.shre.stage3_ranking_ltr import train_and_predict_ltr
+        scores, metadata = train_and_predict_ltr(labeled_path, feature_matrix, feature_names)
+        print("Stage 3: Learning-to-Rank (LambdaMART) prediction complete.")
+        print(f"  - NDCG@10:  {metadata.get('ndcg_at_10', 'N/A'):.4f}")
+        print(f"  - NDCG@100: {metadata.get('ndcg_at_100', 'N/A'):.4f}")
+    except Exception as e:
+        print(f"\n[Stage 3] LTR head failed ({type(e).__name__}: {e}); "
+              f"falling back to validated ensemble ranking.")
+        scores, metadata = train_and_predict_validated(labeled_path, feature_matrix, feature_names)
+        print("Stage 3: Validated Ensemble prediction complete.")
     print(f"  - Test Accuracy: {metadata.get('test_accuracy', 'N/A'):.4f}")
     print(f"  - Test F1-Score: {metadata.get('test_f1', 'N/A'):.4f}")
 

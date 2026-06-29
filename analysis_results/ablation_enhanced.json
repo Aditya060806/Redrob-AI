@@ -1,0 +1,33 @@
+{
+  "classification": {
+    "base (78)": {
+      "features": 78,
+      "accuracy": 0.8333535353535353,
+      "macro_f1": 0.730954724004102
+    },
+    "+anomaly+behavioral": {
+      "features": 88,
+      "accuracy": 0.8453535353535354,
+      "macro_f1": 0.7660529917106796
+    },
+    "+semantic (full)": {
+      "features": 93,
+      "accuracy": 0.8654747474747474,
+      "macro_f1": 0.7943426031216012
+    }
+  },
+  "ranking": {
+    "ensemble_only": {
+      "ndcg_at_10": 0.9964741901407518,
+      "ndcg_at_100": 0.9976139155254204
+    },
+    "pure_ltr": {
+      "ndcg_at_10": 0.9726130496384515,
+      "ndcg_at_100": 0.9784187828171114
+    },
+    "fused_final": {
+      "ndcg_at_10": 0.9958161303893934,
+      "ndcg_at_100": 0.9969494037821149
+    }
+  }
+}

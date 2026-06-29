@@ -1,20 +1,39 @@
 import numpy as np
 from src.common.config import DOMAINS, CONSULTING_COMPANIES
 
+# Enrichment blocks added by the "Opus 4.8" upgrade (Features 1, 3, 4).
+ENRICHMENT_BLOCKS = ('anomaly', 'behavioral', 'semantic')
+
 class FeatureEngineer:
     """
-    Transforms raw candidate profile into 150+ robust features.
-    Handles dirty JSON schema gracefully with .get() and defaults.
+    Transforms raw candidate profile into a rich, robust feature vector.
+
+    Base = 78 dense signals (RETRO). With enrichment enabled it also appends
+    anomaly (Feature 3), behavioral (Feature 4) and multi-vector semantic
+    (Feature 1) signals via a batch pass. Handles dirty JSON gracefully.
     """
-    
-    def compute_features(self, candidates):
-        """Returns (candidate_id, feature_vector) for each candidate"""
+
+    def __init__(self):
+        # Lazily-instantiated, reusable enrichment helpers.
+        self._anomaly_detector = None
+        self._behavioral_scorer = None
+        self._semantic_scorer = None
+
+    def compute_features(self, candidates, enrich=True, blocks=ENRICHMENT_BLOCKS):
+        """
+        Returns [(candidate_id, feature_vector), ...].
+
+        `enrich`/`blocks` control the added Feature 1/3/4 signals (used by the
+        ablation harness to isolate each block's contribution). Enrichment keys
+        are always appended in a fixed order so train- and inference-time
+        feature vectors stay aligned.
+        """
         features = []
-        
+
         for cand in candidates:
             cand_id = cand.get('candidate_id', 'UNKNOWN')
             feature_vec = {}
-            
+
             feature_vec.update(self._trajectory_features(cand))
             feature_vec.update(self._skill_features(cand))
             feature_vec.update(self._education_features(cand))
@@ -24,10 +43,87 @@ class FeatureEngineer:
             feature_vec.update(self._company_features(cand))
             feature_vec.update(self._assessment_features(cand))
             feature_vec.update(self._interaction_features(feature_vec))
-            
+
             features.append((cand_id, feature_vec))
-            
+
+        if enrich and candidates:
+            self._add_enrichment(candidates, features, blocks)
+
         return features
+
+    # ------------------------------------------------------------------
+    # Enrichment (Features 1, 3, 4) — batch pass
+    # ------------------------------------------------------------------
+    def _add_enrichment(self, candidates, features, blocks):
+        n = len(candidates)
+
+        anomaly_block = behavioral_block = semantic_block = None
+
+        if 'anomaly' in blocks:
+            det = self._get_anomaly_detector()
+            anomaly_block = []
+            for cand in candidates:
+                res = cand.get('_anomaly') or det.analyze(cand)
+                cand['_anomaly'] = res
+                anomaly_block.append(self._anomaly_features(res))
+
+        if 'behavioral' in blocks:
+            scorer = self._get_behavioral_scorer()
+            behavioral_block = []
+            for cand in candidates:
+                beh = scorer.score(cand)
+                cand['_behavioral'] = beh
+                behavioral_block.append(beh)
+
+        if 'semantic' in blocks:
+            try:
+                sem_scorer = self._get_semantic_scorer()
+                semantic_block = sem_scorer.score_batch(candidates)
+                for cand, sem in zip(candidates, semantic_block):
+                    cand['_semantic'] = sem
+            except Exception as e:  # noqa: BLE001 - never break the pipeline
+                print(f"[stage2] Semantic enrichment failed ({type(e).__name__}: {e}); "
+                      f"using neutral semantic features.")
+                from src.shre.semantic import SEMANTIC_FEATURE_KEYS
+                semantic_block = [{k: 0.5 for k in SEMANTIC_FEATURE_KEYS}] * n
+
+        # Append enrichment keys in fixed order: anomaly -> behavioral -> semantic.
+        for i, (_, fv) in enumerate(features):
+            if anomaly_block is not None:
+                fv.update(anomaly_block[i])
+            if behavioral_block is not None:
+                fv.update(behavioral_block[i])
+            if semantic_block is not None:
+                fv.update(semantic_block[i])
+
+    @staticmethod
+    def _anomaly_features(res):
+        comp = res.get('components', {})
+        return {
+            'anomaly_score': res.get('anomaly_score', 0.0),
+            'anomaly_flag_count': float(len(res.get('flags', []))),
+            'anomaly_timeline': comp.get('timeline', 0.0),
+            'anomaly_skills_penalty': comp.get('skills', 0.0),
+            'anomaly_synthetic': comp.get('synthetic', 0.0),
+        }
+
+    def _get_anomaly_detector(self):
+        if self._anomaly_detector is None:
+            from src.shre.anomaly import AnomalyDetector
+            self._anomaly_detector = AnomalyDetector()
+        return self._anomaly_detector
+
+    def _get_behavioral_scorer(self):
+        if self._behavioral_scorer is None:
+            from src.shre.behavioral import BehavioralScorer
+            self._behavioral_scorer = BehavioralScorer()
+        return self._behavioral_scorer
+
+    def _get_semantic_scorer(self):
+        if self._semantic_scorer is None:
+            from src.shre.semantic import MultiVectorSemanticScorer
+            self._semantic_scorer = MultiVectorSemanticScorer()
+        return self._semantic_scorer
 
     def _trajectory_features(self, candidate):
         features = {}

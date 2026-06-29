@@ -1,0 +1,57 @@
+============================================================
+  REDROB "Opus 4.8" RANKER — RUN COMMANDS
+============================================================
+
+Notes:
+- On this Windows machine the working interpreter (with all deps installed)
+  is launched via `py -3.13`. On other setups plain `python` also works.
+- Run every command from the project root:
+    cd "D:\work\projects\vandalizers\Redrob AI Submission"
+- First run downloads the sentence-transformers model (~90MB, one time).
+  If transformers/FAISS are unavailable it auto-falls back to TF-IDF.
+
+------------------------------------------------------------
+0) ONE-TIME SETUP — install dependencies
+------------------------------------------------------------
+py -3.13 -m pip install -r requirements.txt
+
+------------------------------------------------------------
+1) RUN THE MODEL — end-to-end ranking pipeline
+   (Stage1 anomaly pre-filter -> Stage2 93 features ->
+    Stage3 ensemble + LambdaMART LTR -> Stage4 top-100)
+------------------------------------------------------------
+py -3.13 -m src.main data/sample_candidates.jsonl output/submission.csv
+
+   Outputs written to output/:
+     - submission.csv            (canonical: candidate_id, rank, score, reasoning)
+     - submission_detailed.csv   (adds semantic / behavioral / anomaly columns)
+     - rankings_full.csv         (all viable candidates)
+
+   For the real dataset, swap in your own JSONL:
+     py -3.13 -m src.main data/candidates.jsonl output/submission.csv
+
+------------------------------------------------------------
+2) RUN THE APPLICATION — interactive Streamlit sandbox
+------------------------------------------------------------
+py -3.13 -m streamlit run sandbox/app.py
+
+   Then open the URL it prints (default http://localhost:8501)
+   and upload a candidates.jsonl file to view ranked results.
+
+------------------------------------------------------------
+2b) RUN THE INTERACTIVE WEB FRONTEND (no Streamlit, no new deps)
+    A branded single-page app. Build candidates via a form, paste
+    JSONL, or upload a file; optionally rank against the benchmark
+    pool. Runs READ-ONLY inference on the saved models (does NOT
+    retrain or modify anything).
+------------------------------------------------------------
+py -3.13 webapp/server.py
+   Then open:  http://localhost:8000
+   (change the port with:  PORT=8080 py -3.13 webapp/server.py)
+
+------------------------------------------------------------
+3) (OPTIONAL) TESTS & VALIDATION
+------------------------------------------------------------
+py -3.13 test_enhanced.py                 # enhanced end-to-end test (18 checks)
+py -3.13 analysis/ablation_enhanced.py    # 5-fold feature + ranking ablation
+============================================================
