@@ -1,3 +1,4 @@
+import os
 import csv
 
 def _generate_reasoning(cand):
@@ -183,4 +184,84 @@ def export_submission(candidates, scores, out_path):
                 _generate_reasoning(raw),
             ])
 
+    # Ranked XLSX deliverable (submission requirement). Mirrors the CSVs in a
+    # formatted workbook: "Top 100" + "Full Rankings" sheets. Never breaks the
+    # pipeline — if the Excel writer is unavailable the CSVs already exist.
+    xlsx_path = os.path.splitext(out_path)[0] + '.xlsx'
+    try:
+        _write_xlsx(xlsx_path, top_100, scored_candidates)
+        print(f"Writing ranked XLSX to {xlsx_path}...")
+    except Exception as e:  # noqa: BLE001 - CSVs are the guaranteed output
+        print(f"[stage4] XLSX export skipped ({type(e).__name__}: {e}); "
+              f"CSV outputs are unaffected.")
+
     print("Done!")
+
+
+def _detailed_rows(items):
+    """Build (rank, candidate_id, score, semantic, behavioral, anomaly, flags,
+    reasoning) tuples for a list of scored items."""
+    rows = []
+    for rank, item in enumerate(items, 1):
+        raw = item['raw']
+        sem = raw.get('_semantic', {}) or {}
+        beh = raw.get('_behavioral', {}) or {}
+        anom = raw.get('_anomaly', {}) or {}
+        rows.append((
+            rank,
+            item['candidate_id'],
+            round(float(item['score']), 4),
+            round(sem.get('semantic_fusion_score', 0.0), 4),
+            round(beh.get('behavioral_composite', 0.0), 4),
+            round(anom.get('anomaly_score', 0.0), 4),
+            '; '.join(anom.get('flags', [])),
+            _generate_reasoning(raw),
+        ))
+    return rows
+
+
+def _write_xlsx(xlsx_path, top_100, scored_candidates):
+    """Write a formatted ranked workbook (openpyxl)."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill
+    from openpyxl.utils import get_column_letter
+
+    headers = ['rank', 'candidate_id', 'score', 'semantic_fit',
+               'behavioral_score', 'anomaly_score', 'anomaly_flags', 'reasoning']
+    # (header, width) — reasoning gets the most room.
+    widths = [6, 16, 9, 12, 16, 13, 32, 90]
+
+    header_font = Font(bold=True, color='FFFFFF')
+    header_fill = PatternFill('solid', fgColor='4F46E5')
+    center = Alignment(horizontal='center', vertical='center')
+    wrap = Alignment(vertical='top', wrap_text=True)
+
+    wb = Workbook()
+
+    def _fill_sheet(ws, rows):
+        ws.append(headers)
+        for c, _ in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=c)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center
+        for r in rows:
+            ws.append(list(r))
+        # Column widths + reasoning wrap.
+        for c, w in enumerate(widths, 1):
+            ws.column_dimensions[get_column_letter(c)].width = w
+        for row in ws.iter_rows(min_row=2, min_col=8, max_col=8):
+            for cell in row:
+                cell.alignment = wrap
+        ws.freeze_panes = 'A2'
+        ws.auto_filter.ref = f"A1:{get_column_letter(len(headers))}{ws.max_row}"
+
+    ws1 = wb.active
+    ws1.title = 'Top 100'
+    _fill_sheet(ws1, _detailed_rows(top_100))
+
+    ws2 = wb.create_sheet('Full Rankings')
+    _fill_sheet(ws2, _detailed_rows(scored_candidates))
+
+    os.makedirs(os.path.dirname(xlsx_path) or '.', exist_ok=True)
+    wb.save(xlsx_path)

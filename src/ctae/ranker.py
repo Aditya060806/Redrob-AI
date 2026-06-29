@@ -177,5 +177,55 @@ def run_ctae_ranking(candidates_path, out_path):
                 item['score'],
                 generate_reasoning(item['raw'])
             ])
-            
+
+    # Ranked XLSX deliverable (also produced on the fallback path).
+    xlsx_path = os.path.splitext(out_path)[0] + '.xlsx'
+    try:
+        _write_ctae_xlsx(xlsx_path, top_100, scored_candidates)
+        print(f"Writing ranked XLSX to {xlsx_path}...")
+    except Exception as e:  # noqa: BLE001 - CSVs are the guaranteed output
+        print(f"[ctae] XLSX export skipped ({type(e).__name__}: {e}); "
+              f"CSV outputs are unaffected.")
+
     print("CTAE Fallback complete!")
+
+
+def _write_ctae_xlsx(xlsx_path, top_100, scored_candidates):
+    """Write a formatted ranked workbook for the CTAE fallback (openpyxl)."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill
+    from openpyxl.utils import get_column_letter
+
+    headers = ['rank', 'candidate_id', 'score', 'reasoning']
+    widths = [6, 16, 9, 110]
+    header_font = Font(bold=True, color='FFFFFF')
+    header_fill = PatternFill('solid', fgColor='4F46E5')
+    center = Alignment(horizontal='center', vertical='center')
+    wrap = Alignment(vertical='top', wrap_text=True)
+
+    wb = Workbook()
+
+    def _fill(ws, items):
+        ws.append(headers)
+        for c in range(1, len(headers) + 1):
+            cell = ws.cell(row=1, column=c)
+            cell.font, cell.fill, cell.alignment = header_font, header_fill, center
+        for rank, item in enumerate(items, 1):
+            ws.append([rank, item['candidate_id'],
+                       round(float(item['score']), 4),
+                       generate_reasoning(item['raw'])])
+        for c, w in enumerate(widths, 1):
+            ws.column_dimensions[get_column_letter(c)].width = w
+        for row in ws.iter_rows(min_row=2, min_col=4, max_col=4):
+            for cell in row:
+                cell.alignment = wrap
+        ws.freeze_panes = 'A2'
+        ws.auto_filter.ref = f"A1:{get_column_letter(len(headers))}{ws.max_row}"
+
+    ws1 = wb.active
+    ws1.title = 'Top 100'
+    _fill(ws1, top_100)
+    _fill(wb.create_sheet('Full Rankings'), scored_candidates)
+
+    os.makedirs(os.path.dirname(xlsx_path) or '.', exist_ok=True)
+    wb.save(xlsx_path)
