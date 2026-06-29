@@ -13,11 +13,14 @@ class FeatureEngineer:
     (Feature 1) signals via a batch pass. Handles dirty JSON gracefully.
     """
 
-    def __init__(self):
+    def __init__(self, jd=None):
         # Lazily-instantiated, reusable enrichment helpers.
         self._anomaly_detector = None
         self._behavioral_scorer = None
         self._semantic_scorer = None
+        # Deep job understanding: the semantic layer matches candidates against
+        # this JD's facets. Defaults to the canonical founding-engineer role.
+        self._jd = jd
 
     def compute_features(self, candidates, enrich=True, blocks=ENRICHMENT_BLOCKS):
         """
@@ -122,7 +125,7 @@ class FeatureEngineer:
     def _get_semantic_scorer(self):
         if self._semantic_scorer is None:
             from src.shre.semantic import MultiVectorSemanticScorer
-            self._semantic_scorer = MultiVectorSemanticScorer()
+            self._semantic_scorer = MultiVectorSemanticScorer(jd=self._jd)
         return self._semantic_scorer
 
     def _trajectory_features(self, candidate):

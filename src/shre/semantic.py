@@ -27,7 +27,6 @@ import numpy as np
 
 from src.common.config import (
     SEMANTIC_MODEL_NAME,
-    JD_FACETS,
     SEMANTIC_FUSION_WEIGHTS,
 )
 
@@ -149,8 +148,14 @@ class SemanticEncoder:
 class MultiVectorSemanticScorer:
     """Builds candidate views, scores semantic fit, and FAISS-ranks the pool."""
 
-    def __init__(self, encoder=None):
+    def __init__(self, encoder=None, jd=None):
         self.encoder = encoder
+        # JD is a JobDescription (deep job understanding). Defaults to the
+        # canonical founding-engineer role for backwards compatibility.
+        if jd is None:
+            from src.shre.job_description import JobDescription
+            jd = JobDescription.default()
+        self.jd = jd
         self._anchors = None  # (skills_anchor, traj_anchor, mission_anchor)
 
     # -- text views ---------------------------------------------------------
@@ -190,7 +195,7 @@ class MultiVectorSemanticScorer:
             self.encoder = SemanticEncoder.load()
         if self.encoder is None:
             corpus = [self.full_view(c) for c in candidates]
-            corpus += list(JD_FACETS.values())
+            corpus += list(self.jd.facets.values())
             self.encoder = SemanticEncoder.build(corpus=corpus)
             self.encoder.save()
         return self.encoder
@@ -198,9 +203,9 @@ class MultiVectorSemanticScorer:
     def _anchor_vecs(self):
         if self._anchors is None:
             anchors = self.encoder.encode([
-                JD_FACETS['required_skills'],
-                JD_FACETS['ideal_experience'],
-                JD_FACETS['role_mission'],
+                self.jd.facets['required_skills'],
+                self.jd.facets['ideal_experience'],
+                self.jd.facets['role_mission'],
             ])
             self._anchors = anchors
         return self._anchors

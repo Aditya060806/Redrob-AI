@@ -38,6 +38,56 @@ def _minmax(arr):
     return (arr - lo) / (hi - lo)
 
 
+def _spearman(y_true, y_score):
+    """
+    Spearman rank correlation (numpy-only, no scipy dependency).
+
+    More sensitive than near-ceiling NDCG to mid-list mis-orderings, so it's a
+    more honest signal of ranking quality on this rule-separable label set.
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    y_score = np.asarray(y_score, dtype=float)
+    if len(y_true) < 3:
+        return float('nan')
+
+    def _rankdata(a):
+        order = np.argsort(a, kind='mergesort')
+        ranks = np.empty(len(a), dtype=float)
+        ranks[order] = np.arange(len(a), dtype=float)
+        # average ties so correlation is well-defined for repeated labels
+        _, inv, counts = np.unique(a, return_inverse=True, return_counts=True)
+        cum = np.cumsum(counts)
+        start = cum - counts
+        avg = (start + cum - 1) / 2.0
+        return avg[inv]
+
+    rt, rs = _rankdata(y_true), _rankdata(y_score)
+    rt -= rt.mean()
+    rs -= rs.mean()
+    denom = np.sqrt((rt ** 2).sum() * (rs ** 2).sum())
+    if denom < 1e-12:
+        return float('nan')
+    return float((rt * rs).sum() / denom)
+
+
+def _hard_ndcg(y_true, y_score, k):
+    """
+    NDCG@k restricted to the confusable middle (relevance 1 & 2), where the
+    trivially-separable 0 and 3 classes are removed. This is the *hard* slice
+    that exposes whether the ranker truly orders borderline candidates well,
+    rather than riding on the easy extremes.
+    """
+    y_true = np.asarray(y_true)
+    y_score = np.asarray(y_score)
+    mask = (y_true == 1) | (y_true == 2)
+    if mask.sum() < 3 or len(set(y_true[mask].tolist())) < 2:
+        return float('nan')
+    from sklearn.metrics import ndcg_score
+    yt = y_true[mask].astype(float)
+    ys = y_score[mask].astype(float)
+    return float(ndcg_score([yt], [ys], k=min(k, int(mask.sum()))))
+
+
 def train_and_predict_ltr(labeled_data_path, feature_matrix, feature_names):
     """
     Train the stacked LambdaMART ranker and score the viable pool.
@@ -105,6 +155,7 @@ def train_and_predict_ltr(labeled_data_path, feature_matrix, feature_names):
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=7)
     ens10, ltr10, fus10 = [], [], []
     ens100, ltr100, fus100 = [], [], []
+    fus_hard10, fus_spear = [], []   # honest "hard slice" diagnostics
     for tr_idx, te_idx in skf.split(X_ltr, y_lab):
         r = xgb.XGBRanker(**ranker_params)
         r.fit(X_ltr[tr_idx], y_lab[tr_idx], group=[len(tr_idx)])
@@ -117,14 +168,28 @@ def train_and_predict_ltr(labeled_data_path, feature_matrix, feature_names):
             lo.append(ndcg_score([y_lab[te_idx]], [ens_te], k=kk))
             ll.append(ndcg_score([y_lab[te_idx]], [pred], k=kk))
             lf.append(ndcg_score([y_lab[te_idx]], [fused], k=kk))
+        # Hard-slice metrics on the fused (final) ranker.
+        h = _hard_ndcg(y_lab[te_idx], fused, k=10)
+        if not np.isnan(h):
+            fus_hard10.append(h)
+        s = _spearman(y_lab[te_idx], fused)
+        if not np.isnan(s):
+            fus_spear.append(s)
 
     base_ndcg10, base_ndcg100 = float(np.mean(ens10)), float(np.mean(ens100))
     pure_ndcg10, pure_ndcg100 = float(np.mean(ltr10)), float(np.mean(ltr100))
     ndcg10, ndcg100 = float(np.mean(fus10)), float(np.mean(fus100))
+    hard_ndcg10 = float(np.mean(fus_hard10)) if fus_hard10 else float('nan')
+    spear_hard = float(np.mean(fus_spear)) if fus_spear else float('nan')
 
     print(f"  Ensemble-only ordering: NDCG@10={base_ndcg10:.4f}  NDCG@100={base_ndcg100:.4f}")
     print(f"  Pure LambdaMART LTR:    NDCG@10={pure_ndcg10:.4f}  NDCG@100={pure_ndcg100:.4f}")
     print(f"  Fused ranker (final):   NDCG@10={ndcg10:.4f}  NDCG@100={ndcg100:.4f}")
+    print(f"  [honest] HARD slice (relevance 1 vs 2 only): "
+          f"NDCG@10={hard_ndcg10:.4f}  Spearman={spear_hard:.4f}")
+    print("  Note: the full-set NDCG is near-ceiling because the 498 labels are "
+          "rule-separable;\n        the hard-slice + Spearman numbers above are the "
+          "honest measure of borderline ordering.")
 
     # --- Step 5: train final ranker on ALL labels; score & fuse on the pool --
     print("\n[LTR] Training final ranker on all labels...")
@@ -146,6 +211,8 @@ def train_and_predict_ltr(labeled_data_path, feature_matrix, feature_names):
         'fusion_ensemble_weight': w_ens,
         'ndcg_at_10': ndcg10,            # fused (final) ranker
         'ndcg_at_100': ndcg100,
+        'ndcg_at_10_hard': hard_ndcg10,  # honest: borderline (rel 1 vs 2) only
+        'spearman_hard': spear_hard,     # honest: full rank correlation
         'pure_ltr_ndcg_at_10': pure_ndcg10,
         'pure_ltr_ndcg_at_100': pure_ndcg100,
         'baseline_ndcg_at_10': base_ndcg10,   # ensemble-only ordering

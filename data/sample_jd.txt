@@ -1,0 +1,18 @@
+Staff Machine Learning Engineer — Search & Ranking
+
+About the role:
+Own the end-to-end design and deployment of large-scale semantic search and
+ranking systems serving millions of queries. Drive the applied AI roadmap for
+retrieval and recommendation.
+
+Responsibilities:
+Build production RAG and ranking pipelines, optimize low-latency inference, and
+mentor engineers on ML systems design.
+
+Required skills:
+Expert Python and PyTorch, deep experience with vector databases (FAISS,
+Pinecone, Milvus), embeddings, semantic search, transformers, fine-tuning, and
+MLOps for scalable model serving.
+
+Experience:
+8 to 12 years of applied machine learning experience at product companies.

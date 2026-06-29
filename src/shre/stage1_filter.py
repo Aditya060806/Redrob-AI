@@ -10,10 +10,20 @@ class FastFilter:
     number of skill pillars. Anomaly results are cached and stashed on each
     surviving candidate (`_anomaly`) so later stages / reasoning can reuse them
     without recomputing.
+
+    The experience band is JD-driven (deep job understanding): if a parsed
+    JobDescription is supplied its min/max years gate candidates; otherwise we
+    fall back to the canonical 3-15 year band from config.
     """
 
-    def __init__(self):
+    def __init__(self, jd=None):
         self.detector = AnomalyDetector()
+        if jd is None:
+            self.min_years = MIN_YEARS_EXP
+            self.max_years = MAX_YEARS_EXP
+        else:
+            self.min_years = jd.min_years
+            self.max_years = jd.max_years
 
     def filter(self, candidates):
         viable = []
@@ -25,7 +35,7 @@ class FastFilter:
                 continue
 
             years = cand.get('profile', {}).get('years_of_experience', 0)
-            if not (MIN_YEARS_EXP <= years <= MAX_YEARS_EXP):
+            if not (self.min_years <= years <= self.max_years):
                 continue
 
             hits = self._count_pillar_hits(cand)

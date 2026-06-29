@@ -35,6 +35,21 @@ This is the sandbox environment for our SHRE + CTAE candidate ranking engine.
 Upload a sample `candidates.jsonl` file (max 1000 candidates recommended for speed) to see the rankings.
 """)
 
+# Deep Job Understanding: paste any JD to re-target the experience gate and the
+# multi-vector semantic-fit signal. Left blank = the default founding-engineer role.
+with st.expander("Customize the Job Description (optional — deep JD understanding)"):
+    jd_text = st.text_area(
+        "Paste a job description",
+        height=200,
+        placeholder=(
+            "e.g.\n\nResponsibilities:\nBuild production RAG and ranking systems...\n\n"
+            "Required skills:\nPython, PyTorch, vector databases (FAISS, Pinecone), RAG...\n\n"
+            "Experience:\n5 to 9 years of applied ML."
+        ),
+        help="Parsed into skills / experience / mission facets and an experience "
+             "band. Leave empty to use the default Founding Senior AI Engineer role.",
+    )
+
 uploaded_file = st.file_uploader("Upload candidates.jsonl", type=['jsonl'])
 
 if uploaded_file is not None:
@@ -50,7 +65,11 @@ if uploaded_file is not None:
     labeled_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'labeling', 'combined_labels.json')
     
     try:
-        run_shre(temp_input, labeled_path, out_csv)
+        from src.shre.job_description import JobDescription
+        jd = JobDescription.from_text(jd_text) if jd_text and jd_text.strip() else None
+        if jd is not None:
+            st.caption(f"Using custom JD — {jd.describe()}")
+        run_shre(temp_input, labeled_path, out_csv, jd=jd)
         st.success("Ranking Complete!")
 
         # Prefer the detailed view (exposes semantic / behavioral / anomaly

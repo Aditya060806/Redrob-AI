@@ -1,6 +1,9 @@
 numpy>=1.26.0
 pandas>=2.1.0
-scikit-learn>=1.3.0
+# Pinned <1.6: scikit-learn 1.6 removed the estimator-tags API that the
+# XGBoost/LightGBM sklearn wrappers rely on inside VotingClassifier, and the
+# bundled model artifacts were trained on 1.5.x. 1.5.2 is the verified version.
+scikit-learn>=1.4.2,<1.6
 xgboost>=2.0.0
 lightgbm>=4.0.0
 catboost>=1.2.0

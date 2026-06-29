@@ -27,12 +27,14 @@ This repository implements a **Hybrid Architecture** (Anomaly Pre-Filter → Enr
 ##  Architecture Overview
 
 The system processes candidate data through four stages:
-1. **Stage 1 (Anomaly Pre-Filter):** `AnomalyDetector` drops synthetic/honeypot profiles (timeline, skill, and synthetic anomalies), then gates on the experience band and a minimum of 2 skill pillars.
+1. **Stage 1 (Anomaly Pre-Filter):** `AnomalyDetector` drops synthetic/honeypot profiles (timeline, skill, and synthetic anomalies), then gates on a **JD-driven experience band** (parsed from the supplied job description, or the default 5–9 target) and a minimum of 2 skill pillars.
 2. **Stage 2 (Enriched Feature Engineering):** Computes **93 dense signals** = **78 base** (career progression, domain specialization in RAG/LLMs/Vector DBs, company classification, platform interactions) **+ 5 anomaly + 5 behavioral + 5 multi-vector semantic** features.
 3. **Stage 3 (Ensemble + Learning-to-Rank):** A **Voting Ensemble (XGBoost + LightGBM + CatBoost)** — trained with **leakage-safe SMOTE inside CV** — produces a class-probability score that, with the enriched features, feeds a **LambdaMART (XGBoost `rank:ndcg`)** head; the two are fused into the final ranking score.
 4. **Stage 4 (Ranker & Reasoning):** Sorts the pool and builds data-backed, **non-hallucinated** reasoning (now citing semantic fit, behavioral signals, and anomaly checks) for each of the top 100. Emits both the canonical `submission.csv` and an enriched `submission_detailed.csv`.
 
 If any library or model load fails, the pipeline automatically falls back: **LTR → validated ensemble → pure-Python CTAE ranker**.
+
+By default Stage 3 runs in **fast inference mode** — it loads the saved ensemble + LambdaMART artifacts and scores the pool with no retraining (the path that scales to a 100k+ pool). `--train` forces a full retrain, and `--jd` re-targets the role (see *How to Run*).
 
 ---
 
@@ -52,6 +54,25 @@ Run the end-to-end pipeline to process candidates and output the final rankings:
 ```bash
 python -m src.main data/candidates.jsonl output/submission.csv
 ```
+
+By default the pipeline runs in **fast inference mode** when trained artifacts
+exist in `models/` — it loads the saved ensemble + LambdaMART head and scores
+the pool **without any retraining**, which is what makes large-pool ranking
+lightning-fast. To force a full retrain (e.g. after changing features or
+labels), add `--train`:
+```bash
+python -m src.main data/candidates.jsonl output/submission.csv --train
+```
+
+**Deep Job Understanding (custom JD).** The target role is no longer hardcoded.
+Pass any job description as raw text or a file with `--jd`; it is parsed into
+the three semantic facets (skills / experience / mission) and an experience
+band, which re-target the Stage-1 gate and the semantic-fit signal:
+```bash
+python -m src.main data/candidates.jsonl output/submission.csv --jd data/sample_jd.txt
+```
+If `--jd` is omitted, the canonical "Founding Senior AI Engineer" role (the role
+the 498 labels were judged for) is used, so behaviour is unchanged.
 
 ### 2. Validation & Testing
 Run the enhanced end-to-end test (modules, enrichment, LTR pipeline, CTAE fallback) and the ablation study:
@@ -79,7 +100,11 @@ streamlit run sandbox/app.py
 | + Anomaly + Behavioral   |   88     |  0.845   |  0.766   |
 | + Semantic (full)        |   93     | **0.866**| **0.794**|
 
-**Ranking quality (5-fold NDCG):** the labeled set is cleanly rule-separable, so the ensemble ordering is near-ceiling (NDCG@10 ≈ `0.9965`); the fused LambdaMART head matches it within noise (`0.9958`) while providing list-level optimization for the dense, noisier real candidate pool.
+**Ranking quality (5-fold NDCG):** the labeled set is cleanly rule-separable, so the ensemble ordering is near-ceiling (NDCG@10 ≈ `0.99`); the fused LambdaMART head matches it within noise while providing list-level optimization for the dense, noisier real candidate pool.
+
+> **Honest reporting of ranking quality.** Because the 498 labels are rule-separable, full-set NDCG is near-ceiling and *overstates* difficulty. We therefore also report two harder, more discriminating diagnostics every training run (`models/metadata_ltr.json`):
+> - **Hard-slice NDCG@10** — restricted to borderline candidates (relevance 1 vs 2), removing the trivially-separable 0 and 3 classes.
+> - **Spearman rank correlation** over the full held-out fold (≈ `0.89`), which is clearly sub-ceiling and is the most honest measure of how well the engine orders the confusable middle.
 
 * **Primary Model:** Voting Ensemble (XGBoost + LightGBM + CatBoost) + LambdaMART LTR head
 * **Semantic Encoder:** `sentence-transformers/all-MiniLM-L6-v2` + FAISS (TF-IDF fallback)
@@ -95,15 +120,17 @@ streamlit run sandbox/app.py
 |-- submission_metadata.yaml    # Hackathon metadata
 |-- README.md                   # This file
 |-- src/
-|   |-- main.py                 # Pipeline entry point (LTR -> ensemble -> CTAE fallback)
+|   |-- main.py                 # Pipeline entry (inference by default; --train, --jd)
 |   |-- shre/
-|   |   |-- stage1_filter.py        # Anomaly pre-filter + experience/pillar gates
+|   |   |-- job_description.py       # Deep JD understanding: parse JD -> facets + exp band
+|   |   |-- stage1_filter.py        # Anomaly pre-filter + JD-driven experience/pillar gates
 |   |   |-- anomaly.py              # Feature 3: Enhanced honeypot/anomaly detection
 |   |   |-- behavioral.py           # Feature 4: Behavioral scoring module
-|   |   |-- semantic.py             # Feature 1: Multi-vector semantic layer (+ FAISS)
+|   |   |-- semantic.py             # Feature 1: Multi-vector semantic layer (+ FAISS), JD-aware
 |   |   |-- stage2_features.py      # 78 base features + enrichment pass (-> 93)
 |   |   |-- stage3_ranking_validated.py  # Voting ensemble (leakage-safe SMOTE)
-|   |   |-- stage3_ranking_ltr.py   # Feature 2: LambdaMART/XGBoost-LTR head (fused)
+|   |   |-- stage3_ranking_ltr.py   # Feature 2: LambdaMART/XGBoost-LTR head (+ honest metrics)
+|   |   |-- inference.py            # Fast inference-only scoring (no retraining)
 |   |   |-- stage4_submit.py        # Ranked top-100 + enriched reasoning
 |   |-- ctae/                   # Fallback rule-based engine
 |-- analysis/ablation_enhanced.py   # 5-fold feature + ranking ablation
