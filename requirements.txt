@@ -13,3 +13,7 @@ streamlit>=1.30.0
 # scikit-learn TF-IDF encoder if these are unavailable at runtime.
 sentence-transformers>=2.2.0
 faiss-cpu>=1.7.4
+# huggingface-hub 1.x drops the API the installed transformers stack expects
+# (transformers requires <1.0). Pinning keeps the real transformer encoder
+# usable; without it the layer silently degrades to TF-IDF.
+huggingface-hub>=0.34.0,<1.0

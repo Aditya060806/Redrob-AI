@@ -8,30 +8,30 @@
   "num_features_original": 93,
   "num_features_selected": 74,
   "val_accuracy": 0.9066666666666666,
-  "val_precision": 0.8887559808612441,
-  "val_recall": 0.8672619047619048,
-  "val_f1": 0.8727096931513375,
-  "test_accuracy": 0.8933333333333333,
-  "test_precision": 0.8385416666666666,
-  "test_recall": 0.8863095238095238,
-  "test_f1": 0.8520277519490738,
+  "val_precision": 0.8834841628959276,
+  "val_recall": 0.8714285714285714,
+  "val_f1": 0.8743001662971175,
+  "test_accuracy": 0.88,
+  "test_precision": 0.8230994152046783,
+  "test_recall": 0.8761904761904762,
+  "test_f1": 0.8338585434173669,
   "confusion_matrix": [
     [
-      39,
-      3,
+      38,
+      4,
       0,
       0
     ],
     [
-      1,
-      13,
+      0,
+      14,
       1,
       0
     ],
     [
       0,
-      0,
-      9,
+      1,
+      8,
       3
     ],
     [
