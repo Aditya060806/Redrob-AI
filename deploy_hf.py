@@ -51,7 +51,7 @@ behavioral_score · anomaly_score · anomaly_flags · reasoning`, plus a formatt
 `submission.xlsx` workbook (Top 100 / Full Rankings / Summary sheets).
 
 ---
-*Team RETRO · India Runs Challenge (Redrob AI). Fully open-source, zero extra cost.*
+*Team Vandalizers · Intelligent Candidate Discovery & Ranking. Fully open-source, zero extra cost.*
 """
 
 DOCKERFILE = """FROM python:3.11-slim

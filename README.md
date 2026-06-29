@@ -24,9 +24,9 @@
 
 ---
 
-This repository implements a **Hybrid Architecture** (Anomaly Pre-Filter → Enriched Feature Engineering → ML Ensemble → Learning-to-Rank) with a pure-Python **CTAE Fallback wrapper** for absolute reliability. It extends the RETRO base with **four targeted enhancements** for deeper JD understanding, richer signal integration, and more accurate, explainable shortlists — all **fully open-source and zero extra cost**.
+This repository implements a **Hybrid Architecture** (Anomaly Pre-Filter → Enriched Feature Engineering → ML Ensemble → Learning-to-Rank) with a pure-Python **CTAE Fallback wrapper** for absolute reliability. It extends a **78-feature base model** with **four targeted enhancements** for deeper JD understanding, richer signal integration, and more accurate, explainable shortlists — all **fully open-source and zero extra cost**.
 
-> **Built for:** *Data & AI Challenge — Intelligent Candidate Discovery (Redrob AI · India Runs).*
+> **Built for:** *Data & AI Challenge — Intelligent Candidate Discovery.*
 > A system that doesn't just filter, but **intelligently ranks**: deep job understanding, contextual relevance beyond keywords, full signal integration, and a lightning-fast, expertly-ranked shortlist with grounded reasoning.
 
 ## 📌 At a glance
@@ -78,13 +78,13 @@ This repository implements a **Hybrid Architecture** (Anomaly Pre-Filter → Enr
 | 1 | **Multi-Vector Semantic Layer** | Separately embeds candidate *skills*, *experience trajectory*, and *full profile* with `all-MiniLM-L6-v2` + **FAISS** retrieval, matches each against three **JD facets**, and fuses them with weighted similarity. | Falls back to a scikit-learn **TF-IDF** encoder if transformers/FAISS are unavailable. |
 | 2 | **LambdaMART / XGBoost-LTR head** | An `XGBRanker` (`rank:ndcg`) stacked on the ensemble's class-probability meta-feature and **fused** with the ensemble ordering to optimize the full ranked list. | Falls back to the validated ensemble ordering. |
 | 3 | **Enhanced Honeypot / Anomaly Detection** | A multi-signal pre-filter catching timeline overlaps, impossible skill durations, and synthetic-profile flags; its anomaly score also feeds the model. | Continuous score is always produced; never blocks the pipeline. |
-| 4 | **Behavioral Scoring Module** | Distills under-utilized Redrob activity / recruiter-demand / OSS / reliability signals into interpretable sub-scores. | Neutral defaults for missing signals. |
+| 4 | **Behavioral Scoring Module** | Distills under-utilized platform activity / recruiter-demand / OSS / reliability signals into interpretable sub-scores. | Neutral defaults for missing signals. |
 
 <sub>1. **Multi-Vector Semantic Layer** — embeds candidate skills, experience trajectory, and full profile, matches against three JD facets, weighted fusion. 2. **LambdaMART/XGBoost-LTR** — `rank:ndcg` head fused with the ensemble. 3. **Enhanced Honeypot/Anomaly Detection** — multi-signal pre-filter + model feature. 4. **Behavioral Scoring** — activity/demand/OSS/reliability sub-scores.</sub>
 
-### RETRO base → "Opus 4.8" (this repo)
+### Base model → "Opus 4.8" (this repo)
 
-| Capability | RETRO base | Opus 4.8 (this repo) |
+| Capability | Base model | Opus 4.8 (this repo) |
 |---|---|---|
 | Features | 78 base | **93** (+anomaly +behavioral +semantic) |
 | Relevance signal | Ensemble class-prob vote | Ensemble **+ LambdaMART LTR fusion** |
@@ -328,7 +328,7 @@ Writing ranked XLSX to output/submission.xlsx...  Done!
 
 | Configuration            | Features | Accuracy | Macro-F1 |
 |--------------------------|:--------:|:--------:|:--------:|
-| Base (RETRO)             |   78     |  0.833   |  0.731   |
+| Base (78 features)       |   78     |  0.833   |  0.731   |
 | + Anomaly + Behavioral   |   88     |  0.845   |  0.766   |
 | + Semantic (full)        |   93     | **0.866**| **0.794**|
 
@@ -535,17 +535,12 @@ Only **7 / 75** held-out samples misclassified (9.3% error), concentrated on the
 
 ## 👥 Team
 
-**Team RETRO** — *India Runs Challenge (Redrob AI)*
+**Team Vandalizers** — *Intelligent Candidate Discovery & Ranking*
 
-| Name | Role |
+| Resource | Link |
 |---|---|
-| Rakesh S | ML Engineer |
-| Anirudhh S | Team Member |
-| Shubha H | Team Member |
-
-* **GitHub:** see `submission_metadata.yaml`
-* **Sandbox:** Streamlit Space (link in `submission_metadata.yaml`)
-* **Reproduce:** `python -m src.main data/candidates.jsonl output/submission.csv`
+| 🤗 **Live Demo (Hugging Face Space)** | `Aditya1002/Staged-Hybrid-Ranking-Engine-SHRE` |
+| ▶️ **Reproduce** | `python -m src.main data/candidates.jsonl output/submission.csv` |
 
 <div align="center">
 <sub>Built fully open-source, at zero extra cost — with a pure-Python fallback so it always produces a ranked shortlist.</sub>
