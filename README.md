@@ -578,26 +578,44 @@ Only **7 / 75** held-out samples misclassified (9.3% error), concentrated on the
 
 ## Limitations & Future Work
 
-1. **Keyword-stuffing susceptibility** — the statistical model can be swayed by keyword-padded profiles.
-   - *Mitigation:* enforce a hard, rule-based keyword-density ceiling in the Stage-1 filter.
-2. **Class-3 data scarcity** — only 38 labeled *ideal-hire* samples limit visibility into the top class.
-   - *Mitigation:* active-learning cycles to label 50+ candidates near the Class 2/3 boundary.
-3. **Single-role supervision** — labels were judged for the founding-engineer role. A custom `--jd` re-targets the semantic + gate signals, but the supervised relevance model itself is role-anchored.
-   - *Mitigation:* collect labels per role family, or train a JD-conditioned ranker.
-4. **Small held-out set (75 samples)** — the 90.7% point estimate carries a non-trivial confidence interval; the 50-run stability band (**85.9% ± 3.0%**) is the more reliable expectation.
+We report limitations openly — each is paired with a concrete mitigation path.
+
+| # | Limitation | Why it matters | Mitigation |
+|:-:|---|---|---|
+| 1 | **Keyword-stuffing susceptibility** | The statistical model can be swayed by keyword-padded profiles that inflate apparent relevance. | Enforce a hard, rule-based **keyword-density ceiling** in the Stage-1 filter (before scoring). |
+| 2 | **Class-3 data scarcity** | Only **38** labeled *ideal-hire* samples limit visibility into the top class, widening uncertainty at the very top of the ranking. | Run **active-learning** cycles to label 50+ candidates near the Class 2/3 boundary. |
+| 3 | **Single-role supervision** | Labels were judged for the founding-engineer role. A custom `--jd` re-targets the *semantic* + *gate* signals, but the supervised relevance model itself stays role-anchored. | Collect labels **per role family**, or train a **JD-conditioned ranker**. |
+| 4 | **Small held-out set (75 samples)** | The **90.7%** point estimate carries a non-trivial confidence interval. | Trust the **50-run stability band (85.9% ± 3.0%)** as the more reliable expectation; expand the held-out set as more labels arrive. |
+
+> **In short:** the engine is statistically sound, stable, and explainable today — with leakage control and a graceful fallback — and every known gap above has a clear, low-cost path forward.
 
 ---
 
 ## Team
 
-**Team Vandalizers** — *Intelligent Candidate Discovery & Ranking*
+<div align="center">
 
-**Members:** Aditya Pandey · Palak Rai · Avik Srivastava
+### 🛠️ Team Vandalizers
+*Intelligent Candidate Discovery & Ranking*
 
-* **Live demo:** [Staged Hybrid Ranking Engine (SHRE) — a Hugging Face Space by Aditya1002](https://huggingface.co/spaces/Aditya1002/Staged-Hybrid-Ranking-Engine-SHRE)
-* **GitHub:** see `submission_metadata.yaml`
-* **Sandbox:** Streamlit Space (link in `submission_metadata.yaml`)
-* **Reproduce:** `python -m src.main data/candidates.jsonl output/submission.csv`
+[![Hugging Face Space](https://img.shields.io/badge/🤗%20Live%20Demo-Staged%20Hybrid%20Ranking%20Engine-FF9D00)](https://huggingface.co/spaces/Aditya1002/Staged-Hybrid-Ranking-Engine-SHRE)
+
+</div>
+
+| Member | | 
+|---|---|
+| 👨‍💻 **Aditya Pandey** | Pipeline, ML & deployment |
+| 👩‍💻 **Palak Rai** | Team member |
+| 👨‍💻 **Avik Srivastava** | Team member |
+
+**Project links**
+
+| Resource | Where |
+|---|---|
+| 🤗 **Live demo** | [Staged Hybrid Ranking Engine (SHRE) — a Hugging Face Space by Aditya1002](https://huggingface.co/spaces/Aditya1002/Staged-Hybrid-Ranking-Engine-SHRE) |
+| 🐙 **GitHub** | see [`submission_metadata.yaml`](submission_metadata.yaml) |
+| 🧪 **Sandbox** | Streamlit Space (link in [`submission_metadata.yaml`](submission_metadata.yaml)) |
+| ▶️ **Reproduce** | `python -m src.main data/candidates.jsonl output/submission.csv` |
 
 <div align="center">
 <sub>Built fully open-source, at zero extra cost — with a pure-Python fallback so it always produces a ranked shortlist.</sub>
