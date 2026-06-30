@@ -559,6 +559,7 @@ Only **7 / 75** held-out samples misclassified (9.3% error), concentrated on the
 | **App / Demo** | Streamlit (deployed as a Hugging Face Space) |
 | **Output** | openpyxl (formatted ranked `submission.xlsx`) + CSV |
 | **Fallback** | Pure-Python CTAE rule engine (zero dependency) |
+| **AI models used** | GLM 5.2 · Claude |
 
 ---
 
