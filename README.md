@@ -616,7 +616,3 @@ We report limitations openly — each is paired with a concrete mitigation path.
 | 🐙 **GitHub** | see [`submission_metadata.yaml`](submission_metadata.yaml) |
 | 🧪 **Sandbox** | Streamlit Space (link in [`submission_metadata.yaml`](submission_metadata.yaml)) |
 | ▶️ **Reproduce** | `python -m src.main data/candidates.jsonl output/submission.csv` |
-
-<div align="center">
-<sub>Built fully open-source, at zero extra cost — with a pure-Python fallback so it always produces a ranked shortlist.</sub>
-</div>
