@@ -116,9 +116,25 @@ def _generate_reasoning(cand):
         reasoning = reasoning[:limit].rsplit(' ', 1)[0].rstrip(' ,;[') + '.'
     return reasoning
 
-def export_submission(candidates, scores, out_path):
+
+def _reasoning_for(cand):
+    """Reasoning is a pure function of the candidate, but it's needed across the
+    top-100, full-ranking, detailed-CSV and XLSX passes. Compute it once and
+    cache it on the candidate dict so large pools don't pay for it repeatedly."""
+    cached = cand.get('_reasoning')
+    if cached is None:
+        cached = _generate_reasoning(cand)
+        cand['_reasoning'] = cached
+    return cached
+
+
+def export_submission(candidates, scores, out_path, jd=None):
     """
     Sorts candidates by score, breaks ties by candidate_id, and writes top 100 to CSV.
+
+    `jd` (a JobDescription) is threaded through so the XLSX deliverable reflects
+    the actual target role when a custom --jd is supplied, rather than always
+    naming the canonical founding-engineer role.
     """
     import os
     dir_name = os.path.dirname(out_path)
@@ -132,28 +148,24 @@ def export_submission(candidates, scores, out_path):
             'score': float(score),
             'raw': cand
         })
-        
-    # Sort by score descending, then candidate_id ascending
-    scored_candidates.sort(key=lambda x: (x['score'], x['candidate_id']), reverse=True)
-    
-    # Need to reverse candidate_id sort because reverse=True sorted both descending.
-    # To do it correctly:
+
+    # Sort by score descending, then candidate_id ascending.
     scored_candidates.sort(key=lambda x: (-x['score'], x['candidate_id']))
-    
+
     top_100 = scored_candidates[:100]
-    
+
     print(f"Writing top 100 to {out_path}...")
     with open(out_path, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
         writer.writerow(['candidate_id', 'rank', 'score', 'reasoning'])
-        
+
         for rank, item in enumerate(top_100, 1):
             cand_id = item['candidate_id']
             score = item['score']
-            reasoning = _generate_reasoning(item['raw'])
-            
+            reasoning = _reasoning_for(item['raw'])
+
             writer.writerow([cand_id, rank, score, reasoning])
-            
+
     # Save the full rankings as requested in the plan
     full_out_path = os.path.join(os.path.dirname(out_path), 'rankings_full.csv')
     print(f"Writing all {len(scored_candidates)} viable candidates to {full_out_path}...")
@@ -161,7 +173,7 @@ def export_submission(candidates, scores, out_path):
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
         writer.writerow(['candidate_id', 'rank', 'score', 'reasoning'])
         for rank, item in enumerate(scored_candidates, 1):
-            writer.writerow([item['candidate_id'], rank, item['score'], _generate_reasoning(item['raw'])])
+            writer.writerow([item['candidate_id'], rank, item['score'], _reasoning_for(item['raw'])])
 
     # Detailed top-100 view exposing the new enrichment signals (for the UI /
     # analysis). The canonical submission.csv above stays a clean 4 columns.
@@ -181,7 +193,7 @@ def export_submission(candidates, scores, out_path):
                 round(beh.get('behavioral_composite', 0.0), 4),
                 round(anom.get('anomaly_score', 0.0), 4),
                 '; '.join(anom.get('flags', [])),
-                _generate_reasoning(raw),
+                _reasoning_for(raw),
             ])
 
     # Ranked XLSX deliverable (submission requirement). Mirrors the CSVs in a
@@ -189,7 +201,7 @@ def export_submission(candidates, scores, out_path):
     # pipeline — if the Excel writer is unavailable the CSVs already exist.
     xlsx_path = os.path.splitext(out_path)[0] + '.xlsx'
     try:
-        _write_xlsx(xlsx_path, top_100, scored_candidates)
+        _write_xlsx(xlsx_path, top_100, scored_candidates, jd=jd)
         print(f"Writing ranked XLSX to {xlsx_path}...")
     except Exception as e:  # noqa: BLE001 - CSVs are the guaranteed output
         print(f"[stage4] XLSX export skipped ({type(e).__name__}: {e}); "
@@ -215,18 +227,19 @@ def _detailed_rows(items):
             round(beh.get('behavioral_composite', 0.0), 4),
             round(anom.get('anomaly_score', 0.0), 4),
             '; '.join(anom.get('flags', [])),
-            _generate_reasoning(raw),
+            _reasoning_for(raw),
         ))
     return rows
 
 
-def _write_xlsx(xlsx_path, top_100, scored_candidates):
+def _write_xlsx(xlsx_path, top_100, scored_candidates, jd=None):
     """Write a professionally-formatted ranked workbook (openpyxl).
 
     Sheets: 'Top 100' (recommended shortlist), 'Full Rankings' (all viable),
     and 'Summary' (run statistics). Includes a title block, styled header,
     banded rows, borders, a red→amber→green colour scale on the score column,
-    number formats, frozen header and an auto-filter.
+    number formats, frozen header and an auto-filter. `jd` (a JobDescription)
+    names the actual target role in the subtitle when supplied.
     """
     from datetime import datetime
     from openpyxl import Workbook
@@ -261,6 +274,14 @@ def _write_xlsx(xlsx_path, top_100, scored_candidates):
     last_col = get_column_letter(ncol)
     stamp = datetime.now().strftime('%Y-%m-%d %H:%M')
 
+    # Role label + experience band for the subtitle (deep job understanding):
+    # reflect the actual --jd role when one is supplied, else the canonical role.
+    role_label = getattr(jd, 'title', None) or 'Founding Senior AI Engineer'
+    if jd is not None:
+        exp_band = f'{jd.target_min:g}–{jd.target_max:g} yrs target'
+    else:
+        exp_band = '5–9 yrs target'
+
     wb = Workbook()
 
     def _build(ws, items, title):
@@ -273,7 +294,7 @@ def _write_xlsx(xlsx_path, top_100, scored_candidates):
 
         ws.merge_cells(f'A2:{last_col}2')
         s = ws['A2']
-        s.value = (f'  Founding Senior AI Engineer · {len(items)} candidates · '
+        s.value = (f'  {role_label} · {exp_band} · {len(items)} candidates · '
                    f'generated {stamp} · score = fused ensemble + LambdaMART LTR (0–1)')
         s.font, s.fill, s.alignment = sub_font, title_fill, left
         ws.row_dimensions[2].height = 16

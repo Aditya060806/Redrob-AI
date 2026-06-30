@@ -1,4 +1,3 @@
-import sys
 from src.common.config import MIN_YEARS_EXP, MAX_YEARS_EXP, SKILL_PILLARS
 from src.shre.anomaly import AnomalyDetector
 

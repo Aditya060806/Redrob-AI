@@ -79,7 +79,7 @@ def run_shre(candidates_path, labeled_path, out_path, jd=None, force_train=False
     print(f"  - Test Accuracy: {_fmt(metadata.get('test_accuracy', 'N/A'))}")
     print(f"  - Test F1-Score: {_fmt(metadata.get('test_f1', 'N/A'))}")
 
-    export_submission(viable, scores, out_path)
+    export_submission(viable, scores, out_path, jd=jd)
 
 
 def _train_path(labeled_path, feature_matrix, feature_names):

@@ -224,6 +224,8 @@ flowchart LR
 
 **Example:** a *Staff ML Engineer (8–12 yrs)* JD tightens the experience gate and re-anchors semantic fit, so a different shortlist surfaces than the default *Founding Senior AI Engineer (5–9 yrs)* role — without retraining.
 
+> **The parsed role flows all the way through to the deliverable.** The JD parser also extracts a **role title**, which (with the experience band) is threaded into Stage 4 so the ranked `submission.xlsx` subtitle and run logs name the *actual* role being hired for — e.g. *"Staff Machine Learning Engineer · 8–12 yrs target"* — instead of always reading "Founding Senior AI Engineer". If no title is detectable it falls back to a neutral *"Custom Role (from JD)"* rather than mislabelling the canonical role.
+
 > The supervised ensemble is still trained on labels for the founding-engineer role. A custom JD re-targets the **JD-relative** semantic-fit signal and the **hard experience gate**; the learned *"higher fit implies higher relevance"* relationship is what transfers across roles. This trade-off is documented honestly rather than hidden.
 
 ---
@@ -256,7 +258,7 @@ To set up the environment and install all dependencies:
 pip install -r requirements.txt
 ```
 
-> **Note on the semantic encoder.** The transformer stack needs `huggingface-hub < 1.0` (pinned in `requirements.txt`); newer hub releases break `transformers`/`sentence-transformers` and silently degrade the layer to TF-IDF. `scikit-learn` is pinned `< 1.6` to match the bundled model artifacts and the XGBoost/LightGBM sklearn wrappers.
+> **Note on the semantic encoder.** The transformer stack needs `huggingface-hub < 1.0` (pinned in `requirements.txt`); newer hub releases break `transformers`/`sentence-transformers` and silently degrade the layer to TF-IDF. `scikit-learn` is pinned `< 1.6` to match the bundled model artifacts and the XGBoost/LightGBM sklearn wrappers, and `numpy` is pinned `< 2.0` because the saved pickles and scikit-learn 1.5.x were built against the numpy 1.x ABI.
 
 ---
 
@@ -267,6 +269,11 @@ Run the end-to-end pipeline to process candidates and output the final rankings:
 ```bash
 python -m src.main data/candidates.jsonl output/submission.csv
 ```
+
+> **Trying it out of the box.** The full `data/candidates.jsonl` pool is not shipped (it's `.gitignore`d). A ready-to-run 498-profile sample is bundled, so you can reproduce a complete run immediately:
+> ```bash
+> python -m src.main data/candidates_demo.jsonl output/submission.csv
+> ```
 
 By default the pipeline runs in **fast inference mode** when trained artifacts
 exist in `models/` — it loads the saved ensemble + LambdaMART head and scores
@@ -285,7 +292,10 @@ band, which re-target the Stage-1 gate and the semantic-fit signal:
 python -m src.main data/candidates.jsonl output/submission.csv --jd data/sample_jd.txt
 ```
 If `--jd` is omitted, the canonical "Founding Senior AI Engineer" role (the role
-the 498 labels were judged for) is used, so behaviour is unchanged.
+the 498 labels were judged for) is used, so behaviour is unchanged. When a
+custom JD *is* supplied, the parsed role title and target band also flow into
+the run logs and the `submission.xlsx` subtitle, so the deliverable names the
+exact role it ranked for.
 
 ### 2. Validation & Testing
 Run the enhanced end-to-end test (modules, enrichment, LTR pipeline, CTAE fallback) and the ablation study:
@@ -344,7 +354,7 @@ A professionally-formatted Excel workbook built for reviewers:
 **Example console output** (sample run, inference mode):
 ```text
 === RUNNING SHRE (Enhanced ML Pipeline - 'Opus 4.8' Grade) ===
-    JD[default] exp 3-15y (target 5-9y); facets: skills=348 chars, mission=264 chars
+    JD[default] 'Founding Senior AI Engineer' exp 3-15y (target 5-9y); facets: skills=348 chars, mission=264 chars
 Stage 1: Filtered 498 down to 293 viable candidates.
 Stage 2: Extracted 93 enriched features.
 Stage 3: Inference mode (scoring with saved models, no retraining).
@@ -352,6 +362,9 @@ Stage 3: Inference mode (scoring with saved models, no retraining).
 Writing top 100 to output/submission.csv...
 Writing ranked XLSX to output/submission.xlsx...  Done!
 ```
+
+> With a custom `--jd`, the first line instead names the parsed role, e.g.
+> `JD[file] 'Staff Machine Learning Engineer' exp 6-18y (target 8-12y); …`.
 
 **Example shortlist rows** (real output — reasoning is generated from actual profile data, never hallucinated):
 
