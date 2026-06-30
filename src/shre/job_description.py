@@ -124,8 +124,10 @@ def _parse_experience_band(text):
 class JobDescription:
     """Structured, semantic-ready view of a target role."""
 
+    DEFAULT_TITLE = 'Founding Senior AI Engineer'
+
     def __init__(self, facets, min_years, max_years,
-                 target_min, target_max, raw='', source='default'):
+                 target_min, target_max, raw='', source='default', title=None):
         self.facets = facets                # {required_skills, ideal_experience, role_mission}
         self.min_years = float(min_years)
         self.max_years = float(max_years)
@@ -133,6 +135,7 @@ class JobDescription:
         self.target_max = float(target_max)
         self.raw = raw
         self.source = source                # 'default' | 'text' | 'file'
+        self.title = title or self.DEFAULT_TITLE
 
     # -- constructors -------------------------------------------------------
     @classmethod
@@ -142,7 +145,7 @@ class JobDescription:
             facets=dict(JD_FACETS),
             min_years=MIN_YEARS_EXP, max_years=MAX_YEARS_EXP,
             target_min=TARGET_YEARS_MIN, target_max=TARGET_YEARS_MAX,
-            raw='', source='default',
+            raw='', source='default', title=cls.DEFAULT_TITLE,
         )
 
     @classmethod
@@ -194,7 +197,8 @@ class JobDescription:
             tlo, thi = TARGET_YEARS_MIN, TARGET_YEARS_MAX
 
         return cls(facets=facets, min_years=lo, max_years=hi,
-                   target_min=tlo, target_max=thi, raw=text, source='text')
+                   target_min=tlo, target_max=thi, raw=text, source='text',
+                   title=_extract_title(text))
 
     @classmethod
     def from_source(cls, jd_arg):
@@ -212,7 +216,7 @@ class JobDescription:
 
     def describe(self):
         """Short human-readable summary for logs / UI."""
-        return (f"JD[{self.source}] exp {self.min_years:g}-{self.max_years:g}y "
+        return (f"JD[{self.source}] '{self.title}' exp {self.min_years:g}-{self.max_years:g}y "
                 f"(target {self.target_min:g}-{self.target_max:g}y); "
                 f"facets: skills={len(self.facets['required_skills'])} chars, "
                 f"mission={len(self.facets['role_mission'])} chars")
@@ -224,3 +228,33 @@ def _harvest_skill_text(text):
     hits = [s.strip() for s in sentences
             if any(k in s.lower() for k in _SKILL_HINTS)]
     return ' '.join(hits).strip()
+
+
+# Cue words that suggest a line names a role/title rather than prose.
+_TITLE_HINTS = (
+    'engineer', 'scientist', 'developer', 'manager', 'lead', 'architect',
+    'researcher', 'analyst', 'specialist', 'director', 'head of', 'founding',
+)
+
+
+def _extract_title(text):
+    """
+    Best-effort role-title extraction from a raw JD.
+
+    Heuristic: scan the first handful of non-empty lines for a short line that
+    reads like a job title (contains a role cue word, not a full sentence).
+    Falls back to a neutral 'Custom Role (from JD)' so the output never claims
+    the wrong canonical role.
+    """
+    for raw_line in text.splitlines()[:8]:
+        line = raw_line.strip().lstrip('#').strip()
+        if not line or len(line.split()) > 8:
+            continue
+        # Skip obvious section headers handled elsewhere.
+        if _looks_like_header(line):
+            continue
+        low = line.lower()
+        if any(h in low for h in _TITLE_HINTS):
+            # Trim a trailing parenthetical/locale and any stray punctuation.
+            return re.split(r'\s*[\|\u2013\u2014\-]\s|\s\(', line)[0].strip(' :.-').strip()
+    return 'Custom Role (from JD)'

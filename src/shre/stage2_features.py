@@ -1,4 +1,5 @@
 import numpy as np
+import re
 from src.common.config import DOMAINS, CONSULTING_COMPANIES
 
 # Enrichment blocks added by the "Opus 4.8" upgrade (Features 1, 3, 4).
@@ -165,8 +166,7 @@ class FeatureEngineer:
     def _skill_features(self, candidate):
         features = {}
         skills = candidate.get('skills', [])
-        assessments = candidate.get('redrob_signals', {}).get('skill_assessment_scores', {})
-        
+
         features['num_skills'] = len(skills)
         features['num_expert_skills'] = sum(1 for s in skills if s.get('proficiency') == 'expert')
         features['num_advanced_skills'] = sum(1 for s in skills if s.get('proficiency') in ['expert', 'advanced'])
@@ -382,7 +382,6 @@ class FeatureEngineer:
 
     def _infer_seniority(self, title):
         """Infer seniority level from job title using regex patterns."""
-        import re
         t = title.lower()
 
         # Use word boundaries to avoid false matches (e.g., "lead" in "leads")
