@@ -146,6 +146,14 @@ By default Stage 3 runs in **fast inference mode** — it loads the saved ensemb
 
 ## Pipeline Flow
 
+<p align="center">
+  <img src="diagrams/architecture_pipeline.png" alt="SHRE architecture — candidates → anomaly filter → 93 features → ensemble + LTR → grounded Top-100, with JD input and CTAE fallback" width="100%">
+  <br><em>End-to-end flow: <code>candidates.jsonl</code> → Stage 1 anomaly pre-filter → Stage 2 feature engineering (93 signals) → Stage 3 ensemble + LambdaMART LTR → Stage 4 ranker &amp; grounded reasoning, with the JD re-targeting the pipeline and the CTAE reliability fallback.</em>
+</p>
+
+<details>
+<summary>View the pipeline as Mermaid source</summary>
+
 ```mermaid
 flowchart TD
     A["candidates.jsonl<br/>(100k+ raw profiles)"] --> B
@@ -187,7 +195,17 @@ flowchart TD
     class JD jd;
 ```
 
+</details>
+
 ### Fallback reliability chain
+
+<p align="center">
+  <img src="diagrams/architecture_fallback.png" alt="Fallback reliability chain — LambdaMART LTR → validated ensemble → pure-Python CTAE, all producing an identical Top-100 shortlist" width="82%">
+  <br><em>Graceful degradation: if any layer fails, the next takes over — the engine always returns a Top-100 shortlist with an identical CSV schema.</em>
+</p>
+
+<details>
+<summary>View the fallback chain as Mermaid source</summary>
 
 ```mermaid
 flowchart LR
@@ -199,6 +217,8 @@ flowchart LR
     classDef ok fill:#0b3d2e,stroke:#10b981,color:#d1fae5;
     class OUT ok;
 ```
+
+</details>
 
 ---
 
