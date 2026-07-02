@@ -762,8 +762,8 @@ We report limitations openly — each is paired with a concrete mitigation path.
 | Member | | 
 |---|---|
 | 👨‍💻 **Aditya Pandey** | Pipeline, ML & deployment |
-| 👩‍💻 **Palak Rai** | Team member |
-| 👨‍💻 **Avik Srivastava** | Team member |
+| 👩‍💻 **Palak Rai** | ML |
+| 👨‍💻 **Avik Srivastava** | ML |
 
 **Project links**
 
