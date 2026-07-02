@@ -67,20 +67,44 @@ Paste a job description (optional), upload a `candidates.jsonl`, and get a ranke
 
 ## Table of Contents
 - [Live Demo](#live-demo)
+- [Problem Statement](#problem-statement)
 - [The Challenge → How SHRE answers it](#the-challenge--how-shre-answers-it)
 - [The Four Enhancements](#the-four-enhancements)
+- [Dataset & Labels](#dataset--labels)
+- [Signals & Feature Dictionary (93 signals)](#signals--feature-dictionary-93-signals)
 - [Architecture Overview](#architecture-overview)
 - [Pipeline Flow](#pipeline-flow)
 - [Deep Job Understanding](#deep-job-understanding-custom-jd)
 - [Fast Inference vs. Retraining](#fast-inference-vs-retraining)
 - [Installation](#installation)
 - [How to Run](#how-to-run)
+- [Explainability & Grounded Reasoning](#explainability--grounded-reasoning)
 - [Performance Summary](#performance-summary)
 - [Scientific Validation Gallery](#scientific-validation-gallery)
 - [Repository Structure](#repository-structure)
 - [Tech Stack](#tech-stack)
 - [Limitations & Future Work](#limitations--future-work)
 - [Team](#team)
+
+---
+
+## Problem Statement
+
+> ### Intelligent Candidate Discovery: Ranking the Top 100 from 100k+ — Fast, Accurate, Explainable.
+
+**In one line:** *Given a nuanced job description and a pool of 100k+ candidate profiles, automatically surface the Top-100 best-fit Senior AI Engineers — fast, accurate, and with explainable, non-hallucinated reasoning — going far beyond keyword matching.*
+
+Recruiting for senior AI talent is a needle-in-a-haystack problem, and every part of it is hard:
+
+| Pain point | Why it breaks traditional tooling |
+|---|---|
+| **Scale** | 100k+ profiles per role make manual screening impossible. |
+| **Shallow matching** | keyword / boolean search misses synonyms, over-rewards buzzword stuffing, and ignores career trajectory. |
+| **No ranking or reasoning** | ATS filters cut the pile but can't say *why* candidate #3 beats #40. |
+| **Noisy data** | fake / synthetic profiles, impossible timelines, and inflated skills ("honeypots") pollute the pool. |
+| **Hard constraints** | it must run fast, on commodity CPU, with **no network** during ranking and **zero API cost**. |
+
+**SHRE answers all five:** deep JD understanding, contextual (semantic) relevance, full signal integration, anomaly defense, and grounded reasoning — under strict runtime/compute limits.
 
 ---
 
@@ -126,6 +150,94 @@ Paste a job description (optional), upload a `candidates.jsonl`, and get a ranke
 | When it runs | Default | If any SHRE stage / import fails |
 | Output | Identical CSV schema | Identical CSV schema |
 | Purpose | Maximum ranking quality | **Never fail to produce a shortlist** |
+
+---
+
+## Dataset & Labels
+
+The supervised signal comes from **498 expert-labeled candidates** (`labeling/combined_labels.json`) judged for the canonical *Founding Senior AI Engineer* role, on a **4-level relevance scale**:
+
+| Label | Class | Meaning |
+|:--:|---|---|
+| **3** | Ideal hire | Strong senior fit — right depth, trajectory, and domain (LLM / RAG / vector) |
+| **2** | Strong | Clearly relevant, minor gaps |
+| **1** | Borderline | Partial fit — the confusable middle |
+| **0** | Not relevant | Off-target experience/skills, or filtered anomalies |
+
+- **Input schema:** `data/candidate_schema.json` — each profile carries `profile`, `career_history`, `education`, `skills`, and `redrob_signals` (platform activity).
+- **Class balance:** the *ideal-hire* class is scarce (**38** samples), handled with **leakage-safe SMOTE inside CV folds** and reported openly in *Limitations*.
+- **Split:** stratified train / validation / held-out test; the **75-sample** held-out test set is never seen during training or model selection.
+- **Adversarial set:** **250 synthetic honeypot profiles** across 5 attack types stress-test the anomaly defense (see *Scientific Validation Gallery*).
+
+---
+
+## Signals & Feature Dictionary (93 signals)
+
+Stage 2 turns each raw profile into **93 dense, interpretable features** — **78 base + 5 anomaly + 5 behavioral + 5 semantic**. Every value is deterministic and inspectable, which is exactly what makes the downstream reasoning auditable.
+
+### Base features (78) — grouped
+| Group | What's measured (examples) |
+|---|---|
+| **Experience & trajectory** | years of experience, `ideal_years_score` (distance to the JD band), tenure per role, seniority progression, job count |
+| **Domain specialization** | keyword-grounded depth in `llm`, `rag`, `vector_db`, `foundation_models`, `deployment`, `eval`; `domain_x_years` (domain × longevity), `domain_llm_score` |
+| **Skill depth** | `avg_skill_duration_months`, skill-pillar coverage, endorsements, assessment scores |
+| **Company & pedigree** | company-size class, product-vs-consulting classification (`CONSULTING_COMPANIES`), industry |
+| **Profile depth** | `summary_length`, profile completeness, education |
+| **Platform interaction** | applications, profile views, search appearances, recruiter saves |
+
+### Skill pillars (Stage-1 gate + coverage)
+A candidate must hit **≥ 2 of 4** pillars to pass the pre-filter:
+
+| Pillar | Matched terms (sample) |
+|---|---|
+| **ml** | machine learning, deep learning, neural network, nlp, llm |
+| **vector** | vector, rag, embedding, retrieval, pinecone, milvus, qdrant, weaviate, faiss |
+| **engineering** | python, pytorch, tensorflow, sql, architecture |
+| **eval** | evaluation, metrics, benchmark, ndcg, mrr, map |
+
+Experience gate: **3–15 yrs** hard band, **5–9 yrs** target (re-targeted by any `--jd`).
+
+### Enrichment block 1 — Multi-Vector Semantic (5)
+Three candidate "views" (skills / trajectory / full profile) are embedded with `all-MiniLM-L6-v2` and matched against three JD facets, then fused:
+
+| Candidate view → JD facet | Fusion weight |
+|---|:--:|
+| skills → `required_skills` | **0.40** |
+| trajectory → `ideal_experience` | **0.35** |
+| full profile → `role_mission` | **0.25** |
+
+> Exposed as `semantic_fusion_score` plus per-view cosine similarities. Degrades to TF-IDF cosine if transformers/FAISS are unavailable.
+
+### Enrichment block 3 — Anomaly / Honeypot (5)
+Continuous, always-produced signals from `AnomalyDetector` (thresholds in `src/common/config.py`):
+
+| Check | Threshold |
+|---|---|
+| Skill claimed longer than tenure | ratio > **1.05** (+ 3-month grace) |
+| Overlapping / impossible timeline | summed tenure > **1.6×** career length |
+| Job overlap tolerated | **3** months (advisory / part-time) |
+| Endorsements vs network | ratio > **3.0** |
+| Stale profile | inactive > **365** days |
+| Treated as synthetic & dropped | anomaly score ≥ **0.6** |
+
+### Enrichment block 4 — Behavioral (5)
+Under-utilized platform signals normalized into interpretable sub-scores (recruiter demand, OSS, reliability, recency):
+
+| Signal | Full-score reference |
+|---|:--:|
+| profile views (30d) | 50 |
+| search appearances (30d) | 80 |
+| saved by recruiters (30d) | 15 |
+| applications (30d) | 20 |
+| connections | 1000 |
+| endorsements received | 100 |
+| recent activity window | 90 days |
+
+> Missing signals fall back to **neutral defaults**, so incomplete profiles are never unfairly penalized.
+
+### Ranking-head hyperparameters (LambdaMART)
+`XGBRanker` (`rank:ndcg`): **200 trees · lr 0.03 · max-depth 4 · subsample 0.9 · colsample 0.9 · reg_lambda 1.5 · min_child_weight 2 · `tree_method=hist` · seed 42**.
+**Final score = 0.6 × ensemble ordering + 0.4 × LTR** (both min-max normalized) — ensemble-dominant so ranking never regresses below the validated ordering, while the LTR refines the dense real pool.
 
 ---
 
@@ -393,6 +505,31 @@ Writing ranked XLSX to output/submission.xlsx...  Done!
 | 1 | `CAND_0072688` | 1.000 | *Data Scientist, 6.9 yrs at Niramai, specializing in vector search and RAG (Milvus); strong semantic alignment to the JD (esp. experience trajectory); very high recruiter responsiveness; high recruiter demand…* |
 | 2 | `CAND_0044890` | 0.596 | *AI Research Engineer, 5.0 yrs at Haptik, vector search & RAG (FAISS); strong semantic JD alignment; active GitHub presence; high recruiter demand.* |
 | 3 | `CAND_0030061` | 0.409 | *Data Analyst, 5.3 yrs at Ola, applied ML (Python); strong semantic JD alignment; active GitHub; reliable follow-through.* |
+
+---
+
+## Explainability & Grounded Reasoning
+
+Every ranked candidate ships with a human-readable justification — and by construction it **cannot hallucinate**.
+
+**How reasoning is generated.** Stage 4 (`stage4_submit.py::_generate_reasoning`) composes each explanation from **verified profile fields and computed signals only** — role, years, company, detected domain skills, semantic-fit level, behavioral highlights, and anomaly checks. It is **template-composed, not free-text generated**: there is no language model in the output path that could invent a credential.
+
+**What each justification cites:**
+- **Identity & experience** — title, years, current company (straight from the profile).
+- **Domain evidence** — the specific detected areas (e.g. *vector search & RAG (FAISS)*), grounded in matched skill/description terms.
+- **Semantic fit** — which JD facet aligned most strongly (skills / trajectory / mission).
+- **Behavioral highlights** — recruiter demand, GitHub/OSS activity, responsiveness, reliability — surfaced **only when the signal is present**.
+- **Integrity** — anomaly flags, or an explicit clean-profile note.
+
+**Why it's trustworthy:**
+- **No fabrication** — if a field is missing, its clause is simply omitted, never guessed.
+- **Auditable numbers** — `semantic_fit`, `behavioral_score`, and `anomaly_score` are exported next to the reasoning in `submission_detailed.csv`, so any claim traces back to a number.
+- **Model-level transparency** — global + local **SHAP** attributions (see *Scientific Validation Gallery*) show *which features* moved each score, complementing the per-candidate text.
+
+**Example (real output):**
+> *"Data Scientist, 6.9 yrs at Niramai, specializing in vector search and RAG (Milvus); strong semantic alignment to the JD (esp. experience trajectory); very high recruiter responsiveness; high recruiter demand."*
+
+Every clause above maps to a concrete field or computed score — nothing is invented.
 
 ---
 
